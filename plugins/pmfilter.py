@@ -2365,6 +2365,8 @@ def clean_text(text: str) -> str:
 
 def format_button_name(file_name: str) -> str:
     # Detect season, episode, or compact match
+    
+    
     season_match  = re.search(r"\b(?:season[\s._-]*(\d{1,2})|s0*(\d{1,2}))\b", file_name, re.I)
     episode_match = re.search(r"\b(?:episode[\s._-]*(\d{1,3})|e[p]?[\s._-]*0*(\d{1,3}))\b", file_name, re.I)
     compact_match = re.search(r"\bS0*(\d{1,2})[\s._-]*E[P]?[\s._-]*0*(\d{1,3})\b", file_name, re.I)
@@ -2379,9 +2381,8 @@ def format_button_name(file_name: str) -> str:
             sn = int(season_match.group(1) or season_match.group(2))
         if episode_match:
             ep = int(episode_match.group(1) or episode_match.group(2))
-
-    # Clean existing season/episode markers from file name
-    cleaned_name = re.sub(r"(?i)(season\s*\d+|s\d+\s*e\d+|s\d+|episode\s*\d+|ep?\s*[\d]+|ep?\s*[_\.-]*\d+)", "", file_name)
+    cleaned_name = re.sub(r"(?i)(?<!\w)(season[\s._-]*\d{1,2}|s0*\d{1,2}[\s._-]*e0*\d{1,3}|s0*\d{1,2}|episode[\s._-]*\d{1,3}|ep[\s._-]*\d{1,3}|e[\s._-]*\d{1,3})(?!\d)", "", file_name)
+    cleaned_name = cleaned_name.replace("_", " ")
     cleaned_name = re.sub(r"\s+", " ", cleaned_name).strip()
     parts = [p for p in cleaned_name.split() if not (p.startswith("[") or p.startswith("@") or p.startswith("www."))]
     
