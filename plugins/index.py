@@ -212,7 +212,7 @@ from typing import Any
 
 WORKER_COUNT = 15
 
-async def _save_worker(worker_id: int, queue: asyncio.Queue, result_queue: asyncio.Queue):
+async def _save_worker(db, worker_id: int, queue: asyncio.Queue, result_queue: asyncio.Queue):
     """
     Worker: takes (media,) items from queue, calls save_file(media),
     and pushes (aynav, vnay) result into result_queue.
@@ -226,7 +226,7 @@ async def _save_worker(worker_id: int, queue: asyncio.Queue, result_queue: async
         media = item
         try:
             # Call the existing save_file function (unchanged)
-            aynav, vnay = await save_file(media)
+            aynav, vnay = await save_file(media, db)
         except Exception as e:
             # If save_file crashes, translate to error tuple
             logger.exception(f"Worker {worker_id} save_file crashed: {e}")
@@ -238,7 +238,7 @@ async def _save_worker(worker_id: int, queue: asyncio.Queue, result_queue: async
     return
 
 # ---------- Updated index function ----------
-async def index_files_to_db(lst_msg_id, chat, msg, bot):
+async def index_files_to_db(lst_msg_id, chat, msg, bot, db):
     """
     This version keeps all pre-checks and media extraction as before,
     but enqueues 'media' objects to a queue which 15 workers consume and
@@ -260,7 +260,7 @@ async def index_files_to_db(lst_msg_id, chat, msg, bot):
     result_queue: asyncio.Queue[tuple] = asyncio.Queue()
 
     # Start workers
-    workers = [asyncio.create_task(_save_worker(i, queue, result_queue)) for i in range(WORKER_COUNT)]
+    workers = [asyncio.create_task(_save_worker(db, i, queue, result_queue)) for i in range(WORKER_COUNT)]
 
     # A task to consume results from result_queue and update counters
     async def result_consumer():
