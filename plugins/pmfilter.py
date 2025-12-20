@@ -1594,16 +1594,6 @@ async def cb_handler(client: Client, query: CallbackQuery):
                   ]]
         
         reply_markup = InlineKeyboardMarkup(buttons)
-        current_time = datetime.now(pytz.timezone(TIMEZONE))
-        curr_time = current_time.hour        
-        if curr_time < 12:
-            gtxt = "Gᴏᴏᴅ ᴍᴏʀɴɪɴG 🌄👋" 
-        elif curr_time < 17:
-            gtxt = "ɢOOᴅ ᴀғᴛᴇʀɴOOɴ 🥵👋" 
-        elif curr_time < 21:
-            gtxt = "Gᴏᴏᴅ ᴇᴠᴇɴɪɴG 🌅👋"
-        else:
-            gtxt = "Gᴏᴏᴅ ɴɪɢʜT 🥱😪👋"
         await client.edit_message_media(
             query.message.chat.id, 
             query.message.id, 
