@@ -2673,8 +2673,10 @@ async def auto_filter(client, msg, spoll=False):
     if syd:
         await message.reply_text("404")
     else:
-        fuk = await sydm.edit(text=cap, reply_markup=InlineKeyboardMarkup(btn), disable_web_page_preview=True)
-        
+        try:
+            fuk = await sydm.edit(text=cap, reply_markup=InlineKeyboardMarkup(btn), disable_web_page_preview=True)
+        except Exception as e:
+            await message.reply_text(e)
         try:
             await asyncio.sleep(300)
             await fuk.delete()
