@@ -100,7 +100,7 @@ async def index_files(bot, query):
         "lst_msg_id": int(lst_msg_id),
         "chat": int(chat) if str(chat).isdigit() else chat,
         "msg": msg,
-        "db": db,
+        "db": int(db),
         "skip": skip
     })
 
