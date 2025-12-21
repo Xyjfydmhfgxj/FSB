@@ -2541,8 +2541,11 @@ async def auto_flter(client, msg, spoll=False):
             await msg.reply(f"❌ An unexpected error occurred. {e}")
 
 
+
+                
 async def auto_filter(client, msg, spoll=False):
-    sydm=await msg.reply("Sᴇᴀʀᴄʜɪɴɢ!", quote=True)
+    ksydtxt = "Sᴇᴀʀᴄʜɪɴɢ ! \n<blockquote>Pʟᴇᴀꜱᴇ Wᴀɪᴛ Fᴇᴡ Mᴏᴍᴇɴᴛꜱ.. 🌿</blockquote>"
+    sydm=await msg.reply(ksydtxt, quote=True)
     mrsyd = None
     try:
         if await db.check_word_exists(msg.text or (msg.message.reply_to_message.text if msg.message and msg.message.reply_to_message else None)):
@@ -2555,42 +2558,23 @@ async def auto_filter(client, msg, spoll=False):
     
     if not spoll:
         message = msg
-        if message.text.startswith("t.me/"): return await sydm.delete()
-        if message.text.startswith("https://"): return await sydm.delete()
-        if message.text.startswith("/"): return await sydm.delete()  # ignore
-        if re.findall("((^\/|^,|^!|^\.|^[\U0001F600-\U000E007F]).*)", message.text):
-            return await sydm.delete()
         if len(message.text) < 100:
             search = message.text.strip().lower()
-          #  m=await message.reply_sticker("CAACAgUAAxkBAAEDePVmZFUmT4nHUw8SSZ6huzlgzRGs-QAC2w8AAr6xKFc_i74CwzHdxh4E",
-            #reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(f'Sᴇᴀʀᴄʜɪɴɢ Fᴏʀ {search} 🔎', url=f"https://t.me/Mod_Moviez_X")]]) 
-           # )
             find = search.split(" ")
             search = ""
-            removes = ["in","upload", "series", "full", "horror", "thriller", "mystery", "print", "file"]
+            removes = ["in","upload", "series", "full", "horror", "thriller", "mystery", "print", "file", "link", "dubbed"]
             for x in find:
                 if x in removes:
                     continue
                 else:
                     search = search + x + " "
             search = re.sub(r"\b(pl(i|e)*?(s|z+|ease|se|ese|(e+)s(e)?)|((send|snd|giv(e)?|gib)(\sme)?)|movie(s)?|new|latest|bro|bruh|broh|helo|that|find|dubbed|link|venum|iruka|pannunga|pannungga|anuppunga|anupunga|anuppungga|anupungga|film|undo|kitti|kitty|tharu|kittumo|kittum|movie|any(one)|with\ssubtitle(s)?)", "", search, flags=re.IGNORECASE)
-            #search = re.sub(r"\s+", " ", search).strip()
-            #search = search.replace("-", " ")
-           # search = search.replace(":","")
             search = clean_text(search)
             if search.strip() == "": return await sydm.delete()
             files, offset, total_results = await get_search_results(client, message.chat.id ,search, offset=0, filter=True)
-            settings = await get_settings(message.chat.id)
             if not files:
                 await sydm.delete()
-                
-                if settings["spell_check"]:
-                    await advantage_spell_chok(client, msg)
-                    #return
-              #  else:
-                    # if NO_RESULTS_MSG:
-                    #     await client.send_message(chat_id=LOG_CHANNEL, text=(script.NORSLTS.format(reqstr.id, reqstr.mention, search)))
-                  #  return
+                await advantage_spell_chok(client, msg)
                 if mrsyd:
                     await asyncio.sleep(60)
                     await mrsyd.delete()
@@ -2604,12 +2588,8 @@ async def auto_filter(client, msg, spoll=False):
     else:
         message = msg.message.reply_to_message  # msg will be callback query
         search, files, offset, total_results = spoll
-      #  m=await message.reply_sticker("CAACAgUAAxkBAAEDePVmZFUmT4nHUw8SSZ6huzlgzRGs-QAC2w8AAr6xKFc_i74CwzHdxh4E",
-        #reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(f'Sᴇᴀʀᴄʜɪɴɢ Fᴏʀ {search} 🔎', callback_data="about")]]) 
-        #)
-        settings = await get_settings(message.chat.id)
         await msg.message.delete()
-    pre = 'filep' if settings['file_secure'] else 'file'
+    pre = 'file'
     key = f"{message.chat.id}-{message.id}"
     FRESH[key] = search
     temp.GETALL[key] = files
@@ -2622,30 +2602,10 @@ async def auto_filter(client, msg, spoll=False):
     if ch_id:
         pre = f"msyd{str(message.chat.id).removeprefix('-100')}" #if settings['file_secure'] else f"mrsyd{str(message.chat.id).removeprefix('-100')}"
     else:
-        pre = 'filep' if settings['file_secure'] else 'file'
-
-    if settings["button"]:
-        #btn = [[
-          #  InlineKeyboardButton(
-            #    text=f"📁 {get_size(f.file_size)} ▷ {' '.join(filter(lambda x: not x.startswith(('[' ,'@', 'www.')), f.file_name.split()))}",
-          #      url=f"https://t.me/{temp.U_NAME}?start=msyd{str(message.chat.id).removeprefix('-100')}_{f.file_id}" if ch_id else None,
-              #  callback_data=None if ch_id else f"{pre}#{f.file_id}"
-          #  )
-      #  ] for f in files]
-      #  btn = [
-            #[
-              #  InlineKeyboardButton(
-                #    text=f"📁 {get_size(f.file_size)} ▷ {' '.join(filter(lambda x: not x.startswith(('[' ,'@', 'www.')), f.file_name.split()))}", 
-                  #  **(
-                       # {"url": f"https://t.me/{temp.U_NAME}?start=msyd{str(message.chat.id).removeprefix('-100')}_{f.file_id}"}
-                       # if await force_db.get_channel_id(message.chat.id)
-                    #    else {"callback_data": f"{pre}#{f.file_id}"}
-                   # )
-               # ),
-          #  ] 
-        #    for f in files
-      #  ]
-
+        pre = 'file'
+    
+    syd = False
+    if not syd:
         btn = [
             [
                 InlineKeyboardButton(
@@ -2690,39 +2650,25 @@ async def auto_filter(client, msg, spoll=False):
 
     if offset != "":
         req = message.from_user.id if message.from_user else 0
-        try:
-            if settings['max_btn']:
-                btn.append(
-                    [InlineKeyboardButton("ᴘΔɢᴇ", callback_data="pages"), InlineKeyboardButton(text=f"1/{math.ceil(int(total_results)/10)}",callback_data="pages"), InlineKeyboardButton(text="ɴᴇxᴛ ⋟",callback_data=f"next_{req}_{key}_{offset}")]
-                )
-            else:
-                btn.append(
-                    [InlineKeyboardButton("ᴘΔɢᴇ", callback_data="pages"), InlineKeyboardButton(text=f"1/{math.ceil(int(total_results)/int(MAX_B_TN))}",callback_data="pages"), InlineKeyboardButton(text="ɴᴇxᴛ ⋟",callback_data=f"next_{req}_{key}_{offset}")]
-                )
-        except KeyError:
-            await save_group_settings(message.chat.id, 'max_btn', True)
-            btn.append(
-                [InlineKeyboardButton("ᴘΔɢᴇ", callback_data="pages"), InlineKeyboardButton(text=f"1/{math.ceil(int(total_results)/10)}",callback_data="pages"), InlineKeyboardButton(text="ɴᴇxᴛ ⋟",callback_data=f"next_{req}_{key}_{offset}")]
-            )
+        btn.append(
+            [InlineKeyboardButton("ᴘΔɢᴇ", callback_data="pages"), InlineKeyboardButton(text=f"1/{math.ceil(int(total_results)/int(MAX_B_TN))}",callback_data="pages"), InlineKeyboardButton(text="ɴᴇxᴛ ⋟",callback_data=f"next_{req}_{key}_{offset}")]
+        )
     else:
         btn.append(
             [InlineKeyboardButton(text="↭ Nᴏ ᴍᴏʀᴇ ᴘᴀɢᴇꜱ ᴀᴠᴀɪʟᴀʙʟE ↭",callback_data="pages")]
         )
-    cur_time = datetime.now(pytz.timezone('Asia/Kolkata')).time()
-    time_difference = timedelta(hours=cur_time.hour, minutes=cur_time.minute, seconds=(cur_time.second+(cur_time.microsecond/1000000))) - timedelta(hours=curr_time.hour, minutes=curr_time.minute, seconds=(curr_time.second+(curr_time.microsecond/1000000)))
-    remaining_seconds = "{:.2f}".format(time_difference.total_seconds())
     TEMPLATE = script.IMDB_TEMPLATE_TXT
-    syd = False
+    tsxt = False
     if syd:
         await message.reply_text("404")
     else:
-        if settings["button"]:
+        if not tsxt:
             syud = message.chat.title if message.chat.title else "Bot Cracker"              #Fix-ed by @Syd_Xyz
-            cap = f"<b>⚧️ Tɪᴛʟᴇ : <code>{search}</code>\n📂 Tᴏᴛᴀʟ ꜰɪʟᴇꜱ : <code>{total_results}</code>\n📝 RᴇQᴜᴇsᴛᴇᴅ ʙʏ : {message.from_user.mention}\n⏰ Rᴇsᴜʟᴛ ɪɴ : <code>{remaining_seconds} Sᴇᴄᴏɴᴅs</code>\n⚜️ Pᴏᴡᴇʀᴇᴅ ʙʏ : 👇\n⚡ {syud} \n\n</b>"  #Fix-ed by @Syd_Xyz
+            cap = f"<b>Sᴇᴀʀᴄʜ Rᴇꜱᴜʟᴛꜱ Fᴏʀ : <code>{search}</code></b>\n<blockquote><b>◈ Tᴏᴛᴀʟ ꜰɪʟᴇꜱ : <code>{total_results}</code>\n◈ Pᴏᴡᴇʀᴇᴅ ʙʏ : {syud} </b></blockquote>"  #Fix-ed by @Syd_Xyz
         else:
             syud = message.chat.title if message.chat.title else "Bot Cracker"              #Fix-ed by @Syd_Xyz
-            cap = f"<b>⚧️ Tɪᴛʟᴇ : <code>{search}</code>\n📂 Tᴏᴛᴀʟ ꜰɪʟᴇꜱ : <code>{total_results}</code>\n📝 RᴇQᴜᴇsᴛᴇᴅ ʙʏ : {message.from_user.mention}\n⏰ Rᴇsᴜʟᴛ ɪɴ : <code>{remaining_seconds} Sᴇᴄᴏɴᴅs</code>\n⚜️ Pᴏᴡᴇʀᴇᴅ ʙʏ : 👇\n⚡ {syud} \n\n</b>"  #Fix-ed by @Syd_Xyz
-            # cap+="<b>Hᴇʏ {message.from_user.mention}, Hᴇʀᴇ ɪs ᴛʜᴇ ʀᴇsᴜʟᴛ ғᴏʀ ʏᴏᴜʀ ᴏ̨ᴜᴇʀʏ {search} \n\n</b>"
+            cap = f"<b>Sᴇᴀʀᴄʜ Rᴇꜱᴜʟᴛꜱ Fᴏʀ : <code>{search}</code></b>\n<blockquote><b>◈ Tᴏᴛᴀʟ ꜰɪʟᴇꜱ : <code>{total_results}</code>\n◈ Pᴏᴡᴇʀᴇᴅ ʙʏ : {syud} </b></blockquote>\n\n"  #Fix-ed by @Syd_Xyz
+        # cap+="<b>Hᴇʏ {message.from_user.mention}, Hᴇʀᴇ ɪs ᴛʜᴇ ʀᴇsᴜʟᴛ ғᴏʀ ʏᴏᴜʀ ᴏ̨ᴜᴇʀʏ {search} \n\n</b>"
             for file in files:
                 cap += f"<b><a href='https://telegram.me/{temp.U_NAME}?start=files_{file.file_id}'> 📁 {get_size(file.file_size)} ▷ {' '.join(filter(lambda x: not x.startswith('[') and not x.startswith('@') and not x.startswith('www.'), file.file_name.split()))}\n\n</a></b>"
 
@@ -2730,23 +2676,24 @@ async def auto_filter(client, msg, spoll=False):
     if syd:
         await message.reply_text("404")
     else:
-        fuk = await sydm.edit(text=cap, reply_markup=InlineKeyboardMarkup(btn), disable_web_page_preview=True)
-        
         try:
-            if settings['auto_delete']:
-                await asyncio.sleep(300)
-                await fuk.delete()
-                if mrsyd:
-                    await mrsyd.delete()
-                await message.delete()
-        except KeyError:
-            await save_group_settings(message.chat.id, 'auto_delete', True)
+            fuk = await sydm.edit(text=cap, reply_markup=InlineKeyboardMarkup(btn), disable_web_page_preview=True)
+        except Exception as e:
+            await message.reply_text(e)
+        try:
             await asyncio.sleep(300)
             await fuk.delete()
             if mrsyd:
                 await mrsyd.delete()
             await message.delete()
-    if sydm.text == "Sᴇᴀʀᴄʜɪɴɢ!":
+        except KeyError:
+            await asyncio.sleep(300)
+            await fuk.delete()
+            if mrsyd:
+                await mrsyd.delete()
+            await message.delete()
+            
+    if sydm.text == ksydtxt:
         await sydm.delete()
             
 async def auto_fter(client, msg, spoll=False):
