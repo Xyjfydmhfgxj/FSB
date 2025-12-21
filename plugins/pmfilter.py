@@ -2542,7 +2542,7 @@ async def auto_flter(client, msg, spoll=False):
 
 
 async def auto_filter(client, msg, spoll=False):
-    sydm=await msg.reply("Sᴇᴀʀᴄʜɪɴɢ!", quote=True)
+    sydm=await msg.reply("Sᴇᴀʀᴄʜɪɴɢ !", quote=True)
     mrsyd = None
     try:
         if await db.check_word_exists(msg.text or (msg.message.reply_to_message.text if msg.message and msg.message.reply_to_message else None)):
@@ -2718,10 +2718,10 @@ async def auto_filter(client, msg, spoll=False):
     else:
         if settings["button"]:
             syud = message.chat.title if message.chat.title else "Bot Cracker"              #Fix-ed by @Syd_Xyz
-            cap = f"<b>⚧️ Tɪᴛʟᴇ : <code>{search}</code>\n📂 Tᴏᴛᴀʟ ꜰɪʟᴇꜱ : <code>{total_results}</code>\n📝 RᴇQᴜᴇsᴛᴇᴅ ʙʏ : {message.from_user.mention}\n⏰ Rᴇsᴜʟᴛ ɪɴ : <code>{remaining_seconds} Sᴇᴄᴏɴᴅs</code>\n⚜️ Pᴏᴡᴇʀᴇᴅ ʙʏ : 👇\n⚡ {syud} \n\n</b>"  #Fix-ed by @Syd_Xyz
+            cap = f"<b>◈ Tɪᴛʟᴇ : <code>{search}</code>\n<blockquote>◈ Tᴏᴛᴀʟ ꜰɪʟᴇꜱ : <code>{total_results}</code>\n◈ RᴇQᴜᴇsᴛᴇᴅ ʙʏ : {message.from_user.mention}\n◈ Rᴇsᴜʟᴛ ɪɴ : <code>{remaining_seconds} Sᴇᴄᴏɴᴅs</code>\n◈ Pᴏᴡᴇʀᴇᴅ ʙʏ : {syud} </blockquote>\n\n</b>"  #Fix-ed by @Syd_Xyz
         else:
             syud = message.chat.title if message.chat.title else "Bot Cracker"              #Fix-ed by @Syd_Xyz
-            cap = f"<b>⚧️ Tɪᴛʟᴇ : <code>{search}</code>\n📂 Tᴏᴛᴀʟ ꜰɪʟᴇꜱ : <code>{total_results}</code>\n📝 RᴇQᴜᴇsᴛᴇᴅ ʙʏ : {message.from_user.mention}\n⏰ Rᴇsᴜʟᴛ ɪɴ : <code>{remaining_seconds} Sᴇᴄᴏɴᴅs</code>\n⚜️ Pᴏᴡᴇʀᴇᴅ ʙʏ : 👇\n⚡ {syud} \n\n</b>"  #Fix-ed by @Syd_Xyz
+            cap = f"<b>◈ Tɪᴛʟᴇ : <code>{search}</code>\n<blockquote>◈ Tᴏᴛᴀʟ ꜰɪʟᴇꜱ : <code>{total_results}</code>\n◈ RᴇQᴜᴇsᴛᴇᴅ ʙʏ : {message.from_user.mention}\n◈ Rᴇsᴜʟᴛ ɪɴ : <code>{remaining_seconds} Sᴇᴄᴏɴᴅs</code>\n◈ Pᴏᴡᴇʀᴇᴅ ʙʏ : {syud} </blockquote>\n\n</b>"  #Fix-ed by @Syd_Xyz
             # cap+="<b>Hᴇʏ {message.from_user.mention}, Hᴇʀᴇ ɪs ᴛʜᴇ ʀᴇsᴜʟᴛ ғᴏʀ ʏᴏᴜʀ ᴏ̨ᴜᴇʀʏ {search} \n\n</b>"
             for file in files:
                 cap += f"<b><a href='https://telegram.me/{temp.U_NAME}?start=files_{file.file_id}'> 📁 {get_size(file.file_size)} ▷ {' '.join(filter(lambda x: not x.startswith('[') and not x.startswith('@') and not x.startswith('www.'), file.file_name.split()))}\n\n</a></b>"
@@ -2746,7 +2746,8 @@ async def auto_filter(client, msg, spoll=False):
             if mrsyd:
                 await mrsyd.delete()
             await message.delete()
-    if sydm.text == "Sᴇᴀʀᴄʜɪɴɢ!":
+            
+    if sydm.text == "Sᴇᴀʀᴄʜɪɴɢ !":
         await sydm.delete()
             
 async def auto_fter(client, msg, spoll=False):
