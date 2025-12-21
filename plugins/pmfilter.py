@@ -2661,7 +2661,7 @@ async def auto_filter(client, msg, spoll=False):
     else:
         if not tsxt:
             syud = message.chat.title if message.chat.title else "Bot Cracker"              #Fix-ed by @Syd_Xyz
-            cap = f"<b>◈ Tɪᴛʟᴇ : <code>{search}</code>\n<blockquote>◈ Tᴏᴛᴀʟ ꜰɪʟᴇꜱ : <code>{total_results}</code>\n◈ Pᴏᴡᴇʀᴇᴅ ʙʏ : {syud} </blockquote>\n\n</b>"  #Fix-ed by @Syd_Xyz
+            cap = f"<b>◈ Tɪᴛʟᴇ : <code>{search}</code></b>\n<blockquote><b>◈ Tᴏᴛᴀʟ ꜰɪʟᴇꜱ : <code>{total_results}</code>\n◈ Pᴏᴡᴇʀᴇᴅ ʙʏ : {syud} </b></blockquote>"  #Fix-ed by @Syd_Xyz
         else:
             syud = message.chat.title if message.chat.title else "Bot Cracker"              #Fix-ed by @Syd_Xyz
             cap = f"<b>◈ Tɪᴛʟᴇ : <code>{search}</code>\n<blockquote>◈ Tᴏᴛᴀʟ ꜰɪʟᴇꜱ : <code>{total_results}</code>\n◈ Pᴏᴡᴇʀᴇᴅ ʙʏ : {syud} </blockquote>\n\n</b>"  #Fix-ed by @Syd_Xyz
