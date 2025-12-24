@@ -573,8 +573,6 @@ async def join_reqs(client, message: ChatJoinRequest):
                     parse_mode=enums.ParseMode.HTML
                 )
                 return
-           except Exception as e:
-               await message.reply(f"⚠️ ᴇʀʀᴏʀ ꜱᴇɴᴅɪɴɢ ꜰɪʟᴇ (Fsub): {e}")
     try:
         files_ = await get_file_details(file_id)
         if files_:
@@ -595,7 +593,7 @@ async def join_reqs(client, message: ChatJoinRequest):
                     pass
         syd = await client.get_messages(chat_id=message.from_user.id, message_ids=messyd)
     except:
-        syd = None
+        syd, f_caption = None, None
     msg = await client.send_cached_media(
         chat_id=message.from_user.id,
         file_id=file_id,
