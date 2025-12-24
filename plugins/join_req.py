@@ -387,7 +387,10 @@ async def fsub_callacks(client, cb):
         return await cb.message.delete()
 
     if data == "fsyd_view":
-        channels = await db.get_fsub_list()
+        try:
+           channels = await db.get_fsub_list()
+        except Exception as e:
+            await cb.message.edit_text(e)
         if not channels:
             return await cb.answer("No force-sub channels set", show_alert=True)
 
