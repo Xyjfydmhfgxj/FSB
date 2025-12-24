@@ -1,3 +1,4 @@
+
 # https://github.com/odysseusmax/animated-lamp/blob/master/bot/database/database.py
 import motor.motor_asyncio
 from info import DATABASE_NAME, DATABASE_URI, DATABASE_URI2, IMDB, IMDB_TEMPLATE, MELCOW_NEW_USERS, P_TTI_SHOW_OFF, SINGLE_BUTTON, SPELL_CHECK_REPLY, PROTECT_CONTENT, AUTO_DELETE, MAX_BTN, AUTO_FFILTER, SHORTLINK_API, SHORTLINK_URL, IS_SHORTLINK, TUTORIAL, CLONE_DB_URI, IS_TUTORIAL
@@ -45,6 +46,7 @@ class Database:
         self.all = self.db.filed
         self.syd = self.db.bots
         self.words = self.db.words
+        self.fsub_col = self.db.fsub_col
         
 
 
@@ -98,6 +100,27 @@ class Database:
         
     async def del_all_join_req(self):
         await self.req.drop()
+
+    async def get_fsub_list(self):
+        data = await self.fsub_col.find_one({"_id": "FSUB"})
+        return data["channels"] if data else []
+
+    async def add_fsub_channel(self, chat_id: int):
+        await self.fsub_col.update_one(
+            {"_id": "FSUB"},
+            {"$addToSet": {"channels": chat_id}},
+            upsert=True
+        )
+
+    async def remove_fsub_channel(self, chat_id: int):
+        await self.fsub_col.update_one(
+            {"_id": "FSUB"},
+            {"$pull": {"channels": chat_id}}
+        )
+
+    async def clear_fsub(self):
+        await self.fsub_col.delete_one({"_id": "FSUB"})
+    
         
     def new_user(self, id, name):
         return dict(
