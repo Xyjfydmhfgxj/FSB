@@ -96,9 +96,13 @@ async def get_authchannel(bot, query, auth_list):
 
     # Helper: return False + first/second auth channel when no DB channels exist
     def no_db_response():
-        ch1 = auth_list[0] if len(auth_list) >= 1 else None
-        ch2 = auth_list[1] if len(auth_list) >= 2 else None
+        if len(auth_list) < 2:
+            ch1 = auth_list[0] if auth_list else None
+            return False, ch1, None
+
+        ch1, ch2 = random.sample(auth_list, 2)
         return False, ch1, ch2
+
 
     # Helper: safe member check
     async def _is_member(bot, ch_id, user_id):
