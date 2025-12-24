@@ -373,7 +373,7 @@ async def fsub_back(client, cb):
     await cb.message.delete()
 
 @Client.on_callback_query(filters.regex("^fsyd_del_") & filters.user(ADMINS))
-async def fsub_delete_one(client, cb):
+async def fsub_delet_one(client, cb):
     chat_id = int(cb.data.split("_")[-1])
     await db.remove_fsub_channel(chat_id)
     modified = await db.remove_channel_from_all_users(chat_id)
@@ -381,7 +381,7 @@ async def fsub_delete_one(client, cb):
     
 
 @Client.on_callback_query(filters.regex("^fsyd_") & filters.user(ADMINS))
-async def fsub_callbacks(client, cb):
+async def fsub_callacks(client, cb):
     data = cb.data
     if data == "fsyd_close":
         return await cb.message.delete()
@@ -409,7 +409,7 @@ async def fsub_callbacks(client, cb):
         )
 
         try:
-            msg = await client.listen(cb.from_user.id, timeout=120)
+            msg = await client.listen(cb.message.from_user.id, timeout=120)
         except:
             return await cb.message.edit_text("⏳ Timeout.")
 
