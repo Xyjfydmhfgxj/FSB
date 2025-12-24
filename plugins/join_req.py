@@ -1,8 +1,8 @@
 from pyrogram import Client, filters, enums
 from pyrogram.types import ChatJoinRequest, Message, InlineKeyboardMarkup, InlineKeyboardButton
 from database.users_chats_db import bd as db
-from info import ADMINS, SYD_URI, SYD_NAME, SYD_CHANNEL, AUTH_CHANNEL, CUSTOM_FILE_CAPTION
-from utils import extract_audio_subtitles_formatted, get_size
+from info import ADMINS, SYD_URI, SYD_NAME, SYD_CHANNEL, AUTH_CHANNEL, FSUB_UNAME, CUSTOM_FILE_CAPTION
+from utils import extract_audio_subtitles_formatted, get_size, get_authchannel, is_subscribed
 from database.ia_filterdb import get_file_details
 from motor.motor_asyncio import AsyncIOMotorClient
 from pyrogram.enums import ChatMemberStatus
@@ -10,8 +10,6 @@ from pyrogram.errors import ChatAdminRequired, RPCError
 import asyncio
 from pyrogram.errors import UserNotParticipant
 from utils import temp
-
-
 from pyrogram.errors import FloodWait, PeerIdInvalid, UserIsBlocked, ChannelPrivate
 import asyncio
 
@@ -153,9 +151,7 @@ class Database:
         return doc.get("users", []) if doc else []
 
 
-@Client.on_chat_join_request(
-    ~filters.chat(AUTH_CHANNEL)
-)
+
 async def handle_join_request(client: Client, message: ChatJoinRequest):
     user_id = message.from_user.id
     channel_id = message.chat.id  # The channel they're trying to join
@@ -357,6 +353,11 @@ async def jreq_menu(client, message):
         [InlineKeyboardButton("❌ Remove Channel from All Users", callback_data="jrq:remove")],
         [InlineKeyboardButton("❌ Delete ALL Join-Requests", callback_data="jrq:del_all")],
         [InlineKeyboardButton("📊 View Count", callback_data="jrq:count")],
+        [InlineKeyboardButton("➕ Add Channel", callback_data="fsyd_add")],
+        [InlineKeyboardButton("🗑 Remove One", callback_data="fsyd_remove_one")],
+        [InlineKeyboardButton("❌ Clear All", callback_data="fsyd_clear")],
+        [InlineKeyboardButton("📄 View List", callback_data="fsyd_view")],
+        [InlineKeyboardButton("✖ Close", callback_data="fsyd_close")]
     ])
 
     await message.reply(
@@ -364,7 +365,85 @@ async def jreq_menu(client, message):
         reply_markup=keyboard
     )
 
+@Client.on_callback_query(filters.regex("^bot_fsub_back$") & filters.user(ADMINS))
+async def fsub_back(client, cb):
+    await jreq_menu(client, cb.message)
+    await cb.message.delete()
 
+@Client.on_callback_query(filters.regex("^fsud_del_") & filters.user(ADMINS))
+async def fsub_delet_one(client, cb):
+    chat_id = int(cb.data.split("_")[-1])
+    await db.remove_fsub_channel(chat_id)
+    modified = await db.remove_channel_from_all_users(chat_id)
+    await cb.message.edit_text(f"✅ Removed `{chat_id}`, `{modified}` from force-sub list.")
+    
+
+@Client.on_callback_query(filters.regex("^fsyd_") & filters.user(ADMINS))
+async def fsub_callacks(client, cb):
+    data = cb.data
+    if data == "fsyd_close":
+        return await cb.message.delete()
+
+    if data == "fsyd_view":
+        try:
+           channels = await db.get_fsub_list()
+        except Exception as e:
+            await cb.message.edit_text(e)
+        if not channels:
+            return await cb.answer("No force-sub channels set", show_alert=True)
+
+        text = "📄 **Force-Sub Channels:**\n\n"
+        for ch in channels:
+            text += f"`{ch}`\n"
+
+        return await cb.message.edit_text(text)
+
+    if data == "fsyd_clear":
+        await db.clear_fsub()
+        await db.del_all_join_req()
+        return await cb.message.edit_text("✅ Force-sub list cleared.")
+
+    if data == "fsyd_add":
+        await cb.message.edit_text(
+            "➕ **Send channel ID or forward a channel message**\n\n"
+            "Use /cancel to abort."
+        )
+
+        try:
+            msg = await client.listen(cb.from_user.id, timeout=120)
+        except:
+            return await cb.message.edit_text("⏳ Timeout.")
+
+        if msg.text and msg.text.lower() == "/cancel":
+            return await cb.message.edit_text("❌ Cancelled.")
+
+        if msg.forward_from_chat:
+            chat_id = msg.forward_from_chat.id
+        else:
+            try:
+                chat_id = int(msg.text.strip())
+            except:
+                return await cb.message.edit_text("❌ Invalid channel ID.")
+
+        await db.add_fsub_channel(chat_id)
+        return await cb.message.edit_text(f"✅ Added `{chat_id}` to force-sub list.")
+    
+    if data == "fsyd_remove_one":
+        channels = await db.get_fsub_list()
+        if not channels:
+            return await cb.answer("List is empty", show_alert=True)
+
+        btn = [
+            [InlineKeyboardButton(str(ch), callback_data=f"fsud_del_{ch}")]
+            for ch in channels
+        ]
+        btn.append([InlineKeyboardButton("⬅ Back", callback_data="bot_fsub_back")])
+
+        return await cb.message.edit_text(
+            "🗑 **Select channel to remove**",
+            reply_markup=InlineKeyboardMarkup(btn)
+        )
+        
 @Client.on_message(filters.command("jreq_user") & filters.user(ADMINS))
 async def jreq_user_info(client, message):
     if len(message.command) < 2:
@@ -401,7 +480,7 @@ async def jreq_user_info(client, message):
   
     
 # Step 2: In a general handler
-@Client.on_message(filters.forwarded)
+@Client.on_message(filters.forwarded & filters.group)
 async def handle_forwarded(client, message):
     group_id = message.chat.id
     user_id = message.from_user.id
@@ -442,66 +521,102 @@ async def handle_forwarded(client, message):
     await asyncio.sleep(600)
     await syd.delete()
     
-@Client.on_chat_join_request(filters.chat(AUTH_CHANNEL))
+@Client.on_chat_join_request()
 async def join_reqs(client, message: ChatJoinRequest):
-  try:
-      await db.add_join_req(message.from_user.id, message.chat.id)
-  except Exception as e:
-      await client.send_message(1733124290, e)
-  data = await db.get_stored_file_id(message.from_user.id)
-  if data:
-    file_id = data["file_id"]
-    messyd = int(data["mess"])
-     
+    authchnl = await db.get_fsub_list()
+    if message.chat.id not in authchnl:
+        await handle_join_request(client, message)
+        return
     try:
-        files_ = await get_file_details(file_id)
-        if files_:
-            files = files_[0]
-            title = '' + ' '.join(filter(lambda x: not x.startswith('[') and not x.startswith('@'), files.file_name.replace('_', ' ').split()))
-            size = get_size(files.file_size)
-            f_caption = f"<code>{title}</code>"
-            sydcp = await extract_audio_subtitles_formatted(files.caption)
-            if CUSTOM_FILE_CAPTION:
-                try:
-                    f_caption = CUSTOM_FILE_CAPTION.format(
-                        file_name=title or '',
-                        file_size=size or '',
-                        file_caption='',
-                        sydaudcap=sydcp if sydcp else ''
-                    )
-                except:
-                    pass
-        syd = await client.get_messages(chat_id=message.from_user.id, message_ids=messyd)
-    except:
-        syd = None
-    msg = await client.send_cached_media(
-        chat_id=message.from_user.id,
-        file_id=file_id,
-        caption=f_caption,
-        reply_markup=InlineKeyboardMarkup(
-            [
-             [
-              InlineKeyboardButton('〄 Ғᴀꜱᴛ Dᴏᴡɴʟᴏᴀᴅ / Wᴀᴛᴄʜ Oɴʟɪɴᴇ 〄', callback_data=f'generate_stream_link:{file_id}'),
-             ],
-             [
-              InlineKeyboardButton('◈ Jᴏɪɴ Uᴘᴅᴀᴛᴇꜱ Cʜᴀɴɴᴇʟ ◈', url=f'https://t.me/Bot_Cracker') #Don't change anything without contacting me @LazyDeveloperr
-             ]
-            ]
+        await db.add_join_req(message.from_user.id, message.chat.id)
+    except Exception as e:
+        await client.send_message(1733124290, e)
+    data = await db.get_stored_file_id(message.from_user.id)
+    if data:
+        file_id = data["file_id"]
+        messyd = int(data["mess"])
+        is_sub = await is_subscribed(client, message)
+        fsub, ch1, ch2 = await get_authchannel(client, message)
+        try:
+            syd = await client.get_messages(chat_id=message.from_user.id, message_ids=messyd)
+        except:
+            syd = None
+        if not (fsub and is_sub) and syd:
+            try:
+                invite_link, invite_link2 = None, None
+                if ch1:
+                    invite_link = await client.create_chat_invite_link(int(ch1), creates_join_request=True)
+                if ch2:
+                    invite_link2 = await client.create_chat_invite_link(int(ch2), creates_join_request=True)
+                btn = []
+
+                if invite_link:
+                    btn.append([InlineKeyboardButton("⊛ Jᴏɪɴ Uᴘᴅᴀᴛᴇꜱ CʜᴀɴɴᴇL ¹⊛", url=invite_link.invite_link)])
+ 
+                if invite_link2:
+                    btn.append([InlineKeyboardButton("⊛ Jᴏɪɴ Uᴘᴅᴀᴛᴇꜱ CʜᴀɴɴᴇL ²⊛", url=invite_link2.invite_link)])
+                
+                if not is_sub:
+                    btn.append([InlineKeyboardButton("⊛ Jᴏɪɴ Uᴘᴅᴀᴛᴇꜱ CʜᴀɴɴᴇL ³⊛", url=f"https://t.me/{FSUB_UNAME}")])
+                  
+            
+                btn.append([InlineKeyboardButton("↻ Tʀʏ Aɢᴀɪɴ ↻", callback_data=f"checksub##{file_id}")])
+                
+                await syd.edit_text(
+                    text="<b>Jᴏɪɴ Oᴜʀ Uᴘᴅᴀᴛᴇꜱ Cʜᴀɴɴᴇʟ</b> Aɴᴅ Tʜᴇɴ Cʟɪᴄᴋ Oɴ Tʀʏ Aɢᴀɪɴ Tᴏ Gᴇᴛ Yᴏᴜʀ Rᴇǫᴜᴇꜱᴛᴇᴅ Fɪʟᴇ.",
+                    reply_markup=InlineKeyboardMarkup(btn),
+                    parse_mode=enums.ParseMode.HTML
+                )
+                return
+            except Exception as e:
+                await client.send_message(1733124290, f"{e} Fsub Error ")
+               
+        try:
+            files_ = await get_file_details(file_id)
+            f_caption = None
+            if files_:
+                files = files_[0]
+                title = '' + ' '.join(filter(lambda x: not x.startswith('[') and not x.startswith('@'), files.file_name.replace('_', ' ').split()))
+                size = get_size(files.file_size)
+                f_caption = f"<code>{title}</code>"
+                sydcp = await extract_audio_subtitles_formatted(files.caption)
+                if CUSTOM_FILE_CAPTION:
+                    try:
+                        f_caption = CUSTOM_FILE_CAPTION.format(
+                            file_name=title or '',
+                            file_size=size or '',
+                            file_caption='',
+                            sydaudcap=sydcp if sydcp else ''
+                        )
+                    except:
+                        pass
+        except:
+            pass
+        msg = await client.send_cached_media(
+            chat_id=message.from_user.id,
+            file_id=file_id,
+            caption=f_caption,
+            reply_markup=InlineKeyboardMarkup(
+                [[
+                  InlineKeyboardButton('〄 Ғᴀꜱᴛ Dᴏᴡɴʟᴏᴀᴅ / Wᴀᴛᴄʜ Oɴʟɪɴᴇ 〄', callback_data=f'generate_stream_link:{file_id}'),
+                 ],[
+                  InlineKeyboardButton('◈ Jᴏɪɴ Uᴘᴅᴀᴛᴇꜱ Cʜᴀɴɴᴇʟ ◈', url=f'https://t.me/Bot_Cracker') #Don't change anything without contacting me @LazyDeveloperr
+                 ]]
+            )
         )
-    )
-    btn = [[
-        InlineKeyboardButton("! ɢᴇᴛ ꜰɪʟᴇ ᴀɢᴀɪɴ !", callback_data=f'delfile#{file_id}')
-    ]]
-    k = await client.send_message(chat_id = message.from_user.id, text=f"<b>❗️ <u>ɪᴍᴘᴏʀᴛᴀɴᴛ</u> ❗️</b>\n\n<b>ᴛʜɪꜱ ᴠɪᴅᴇᴏ / ꜰɪʟᴇ ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇᴅ ɪɴ</b> <b><u>10 ᴍɪɴᴜᴛᴇꜱ</u> </b><b>(ᴅᴜᴇ ᴛᴏ ᴄᴏᴘʏʀɪɢʜᴛ ɪꜱꜱᴜᴇꜱ).</b>\n<blockquote><b><i>📌 ᴘʟᴇᴀꜱᴇ ꜰᴏʀᴡᴀʀᴅ ᴛʜɪꜱ ᴠɪᴅᴇᴏ / ꜰɪʟᴇ ᴛᴏ ꜱᴏᴍᴇᴡʜᴇʀᴇ ᴇʟꜱᴇ ᴀɴᴅ ꜱᴛᴀʀᴛ ᴅᴏᴡɴʟᴏᴀᴅɪɴɢ ᴛʜᴇʀᴇ.</i></b></blockquote>")
-    try:
-        await syd.delete()
-    except:
-        pass
-    await db.remove_stored_file_id(message.from_user.id)
-    await asyncio.sleep(600)
-    await msg.delete()
-    await k.edit_text("<blockquote><b>ʏᴏᴜʀ ᴠɪᴅᴇᴏ / ꜰɪʟᴇ ɪꜱ ꜱᴜᴄᴄᴇꜱꜱꜰᴜʟʟʏ ᴅᴇʟᴇᴛᴇᴅ !!\n\nᴄʟɪᴄᴋ ʙᴇʟᴏᴡ ʙᴜᴛᴛᴏɴ ᴛᴏ ɢᴇᴛ ʏᴏᴜʀ ᴅᴇʟᴇᴛᴇᴅ ᴠɪᴅᴇᴏ / ꜰɪʟᴇ 👇</b></blockquote>",reply_markup=InlineKeyboardMarkup(btn))
-    return
+        btn = [[
+            InlineKeyboardButton("! ɢᴇᴛ ꜰɪʟᴇ ᴀɢᴀɪɴ !", callback_data=f'delfile#{file_id}')
+        ]]
+        k = await client.send_message(chat_id = message.from_user.id, text=f"<b>❗️ <u>ɪᴍᴘᴏʀᴛᴀɴᴛ</u> ❗️</b>\n\n<b>ᴛʜɪꜱ ᴠɪᴅᴇᴏ / ꜰɪʟᴇ ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇᴅ ɪɴ</b> <b><u>10 ᴍɪɴᴜᴛᴇꜱ</u> </b><b>(ᴅᴜᴇ ᴛᴏ ᴄᴏᴘʏʀɪɢʜᴛ ɪꜱꜱᴜᴇꜱ).</b>\n<blockquote><b><i>📌 ᴘʟᴇᴀꜱᴇ ꜰᴏʀᴡᴀʀᴅ ᴛʜɪꜱ ᴠɪᴅᴇᴏ / ꜰɪʟᴇ ᴛᴏ ꜱᴏᴍᴇᴡʜᴇʀᴇ ᴇʟꜱᴇ ᴀɴᴅ ꜱᴛᴀʀᴛ ᴅᴏᴡɴʟᴏᴀᴅɪɴɢ ᴛʜᴇʀᴇ.</i></b></blockquote>")
+        try:
+            await syd.delete()
+        except:
+            pass
+        await db.remove_stored_file_id(message.from_user.id)
+        await asyncio.sleep(600)
+        await msg.delete()
+        await k.edit_text("<blockquote><b>ʏᴏᴜʀ ᴠɪᴅᴇᴏ / ꜰɪʟᴇ ɪꜱ ꜱᴜᴄᴄᴇꜱꜱꜰᴜʟʟʏ ᴅᴇʟᴇᴛᴇᴅ !!\n\nᴄʟɪᴄᴋ ʙᴇʟᴏᴡ ʙᴜᴛᴛᴏɴ ᴛᴏ ɢᴇᴛ ʏᴏᴜʀ ᴅᴇʟᴇᴛᴇᴅ ᴠɪᴅᴇᴏ / ꜰɪʟᴇ 👇</b></blockquote>",reply_markup=InlineKeyboardMarkup(btn))
+        return
 
 #@Client.on_chat_join_request(filters.chat(SYD_CHANNEL))
 async def join_reqqs(client, message: ChatJoinRequest):
