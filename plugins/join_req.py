@@ -355,11 +355,11 @@ async def jreq_menu(client, message):
         [InlineKeyboardButton("❌ Remove Channel from All Users", callback_data="jrq:remove")],
         [InlineKeyboardButton("❌ Delete ALL Join-Requests", callback_data="jrq:del_all")],
         [InlineKeyboardButton("📊 View Count", callback_data="jrq:count")],
-        [InlineKeyboardButton("➕ Add Channel", callback_data="fsub_add")],
-        [InlineKeyboardButton("🗑 Remove One", callback_data="fsub_remove_one")],
-        [InlineKeyboardButton("❌ Clear All", callback_data="fsub_clear")],
-        [InlineKeyboardButton("📄 View List", callback_data="fsub_view")],
-        [InlineKeyboardButton("✖ Close", callback_data="fsub_close")]
+        [InlineKeyboardButton("➕ Add Channel", callback_data="fsyd_add")],
+        [InlineKeyboardButton("🗑 Remove One", callback_data="fsyd_remove_one")],
+        [InlineKeyboardButton("❌ Clear All", callback_data="fsyd_clear")],
+        [InlineKeyboardButton("📄 View List", callback_data="fsyd_view")],
+        [InlineKeyboardButton("✖ Close", callback_data="fsyd_close")]
     ])
 
     await message.reply(
@@ -372,7 +372,7 @@ async def fsub_back(client, cb):
     await jreq_menu(client, cb.message)
     await cb.message.delete()
 
-@Client.on_callback_query(filters.regex("^fsub_del_") & filters.user(ADMINS))
+@Client.on_callback_query(filters.regex("^fsyd_del_") & filters.user(ADMINS))
 async def fsub_delete_one(client, cb):
     chat_id = int(cb.data.split("_")[-1])
     await db.remove_fsub_channel(chat_id)
@@ -380,13 +380,13 @@ async def fsub_delete_one(client, cb):
     await cb.message.edit_text(f"✅ Removed `{chat_id}`, `{modified}` from force-sub list.")
     
 
-@Client.on_callback_query(filters.regex("^fsub_") & filters.user(ADMINS))
+@Client.on_callback_query(filters.regex("^fsyd_") & filters.user(ADMINS))
 async def fsub_callbacks(client, cb):
     data = cb.data
-    if data == "fsub_close":
+    if data == "fsyd_close":
         return await cb.message.delete()
 
-    if data == "fsub_view":
+    if data == "fsyd_view":
         channels = await db.get_fsub_list()
         if not channels:
             return await cb.answer("No force-sub channels set", show_alert=True)
@@ -397,12 +397,12 @@ async def fsub_callbacks(client, cb):
 
         return await cb.message.edit_text(text)
 
-    if data == "fsub_clear":
+    if data == "fsyd_clear":
         await db.clear_fsub()
         await db.del_all_join_req()
         return await cb.message.edit_text("✅ Force-sub list cleared.")
 
-    if data == "fsub_add":
+    if data == "fsyd_add":
         await cb.message.edit_text(
             "➕ **Send channel ID or forward a channel message**\n\n"
             "Use /cancel to abort."
@@ -427,7 +427,7 @@ async def fsub_callbacks(client, cb):
         await db.add_fsub_channel(chat_id)
         return await cb.message.edit_text(f"✅ Added `{chat_id}` to force-sub list.")
     
-    if data == "fsub_remove_one":
+    if data == "fsyd_remove_one":
         channels = await db.get_fsub_list()
         if not channels:
             return await cb.answer("List is empty", show_alert=True)
