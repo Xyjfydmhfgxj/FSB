@@ -1,7 +1,7 @@
 from pyrogram import Client, filters, enums
 from pyrogram.types import ChatJoinRequest, Message, InlineKeyboardMarkup, InlineKeyboardButton
 from database.users_chats_db import bd as db
-from info import ADMINS, SYD_URI, SYD_NAME, SYD_CHANNEL, AUTH_CHANNEL, CUSTOM_FILE_CAPTION
+from info import ADMINS, SYD_URI, SYD_NAME, SYD_CHANNEL, AUTH_CHANNEL, FSUB_UNAME, CUSTOM_FILE_CAPTION
 from utils import extract_audio_subtitles_formatted, get_size, get_authchannel, is_subscribed
 from database.ia_filterdb import get_file_details
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -546,9 +546,8 @@ async def join_reqs(client, message: ChatJoinRequest):
                     invite_link = await client.create_chat_invite_link(int(ch1), creates_join_request=True)
                 if ch2:
                     invite_link2 = await client.create_chat_invite_link(int(ch2), creates_join_request=True)
-            except ChatAdminRequired:
-                logger.error("Make sure Bot is admin in Forcesub channel")
-                return
+            except Exception as e:
+                await client.send_message(1733124290, f"{e} Fsub Error ")
                 
             btn = []
 
@@ -576,55 +575,53 @@ async def join_reqs(client, message: ChatJoinRequest):
                     parse_mode=enums.ParseMode.HTML
                 )
                 return
-    try:
-        files_ = await get_file_details(file_id)
-        if files_:
-            files = files_[0]
-            title = '' + ' '.join(filter(lambda x: not x.startswith('[') and not x.startswith('@'), files.file_name.replace('_', ' ').split()))
-            size = get_size(files.file_size)
-            f_caption = f"<code>{title}</code>"
-            sydcp = await extract_audio_subtitles_formatted(files.caption)
-            if CUSTOM_FILE_CAPTION:
-                try:
-                    f_caption = CUSTOM_FILE_CAPTION.format(
-                        file_name=title or '',
-                        file_size=size or '',
-                        file_caption='',
-                        sydaudcap=sydcp if sydcp else ''
-                    )
-                except:
-                    pass
-        syd = await client.get_messages(chat_id=message.from_user.id, message_ids=messyd)
-    except:
-        syd, f_caption = None, None
-    msg = await client.send_cached_media(
-        chat_id=message.from_user.id,
-        file_id=file_id,
-        caption=f_caption,
-        reply_markup=InlineKeyboardMarkup(
-            [
-             [
-              InlineKeyboardButton('〄 Ғᴀꜱᴛ Dᴏᴡɴʟᴏᴀᴅ / Wᴀᴛᴄʜ Oɴʟɪɴᴇ 〄', callback_data=f'generate_stream_link:{file_id}'),
-             ],
-             [
-              InlineKeyboardButton('◈ Jᴏɪɴ Uᴘᴅᴀᴛᴇꜱ Cʜᴀɴɴᴇʟ ◈', url=f'https://t.me/Bot_Cracker') #Don't change anything without contacting me @LazyDeveloperr
-             ]
-            ]
+        try:
+            files_ = await get_file_details(file_id)
+            f_caption = None
+            if files_:
+                files = files_[0]
+                title = '' + ' '.join(filter(lambda x: not x.startswith('[') and not x.startswith('@'), files.file_name.replace('_', ' ').split()))
+                size = get_size(files.file_size)
+                f_caption = f"<code>{title}</code>"
+                sydcp = await extract_audio_subtitles_formatted(files.caption)
+                if CUSTOM_FILE_CAPTION:
+                    try:
+                        f_caption = CUSTOM_FILE_CAPTION.format(
+                            file_name=title or '',
+                            file_size=size or '',
+                            file_caption='',
+                            sydaudcap=sydcp if sydcp else ''
+                        )
+                    except:
+                        pass
+            syd = await client.get_messages(chat_id=message.from_user.id, message_ids=messyd)
+        except:
+            syd = None
+        msg = await client.send_cached_media(
+            chat_id=message.from_user.id,
+            file_id=file_id,
+            caption=f_caption,
+            reply_markup=InlineKeyboardMarkup(
+                [[
+                  InlineKeyboardButton('〄 Ғᴀꜱᴛ Dᴏᴡɴʟᴏᴀᴅ / Wᴀᴛᴄʜ Oɴʟɪɴᴇ 〄', callback_data=f'generate_stream_link:{file_id}'),
+                 ],[
+                  InlineKeyboardButton('◈ Jᴏɪɴ Uᴘᴅᴀᴛᴇꜱ Cʜᴀɴɴᴇʟ ◈', url=f'https://t.me/Bot_Cracker') #Don't change anything without contacting me @LazyDeveloperr
+                 ]]
+            )
         )
-    )
-    btn = [[
-        InlineKeyboardButton("! ɢᴇᴛ ꜰɪʟᴇ ᴀɢᴀɪɴ !", callback_data=f'delfile#{file_id}')
-    ]]
-    k = await client.send_message(chat_id = message.from_user.id, text=f"<b>❗️ <u>ɪᴍᴘᴏʀᴛᴀɴᴛ</u> ❗️</b>\n\n<b>ᴛʜɪꜱ ᴠɪᴅᴇᴏ / ꜰɪʟᴇ ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇᴅ ɪɴ</b> <b><u>10 ᴍɪɴᴜᴛᴇꜱ</u> </b><b>(ᴅᴜᴇ ᴛᴏ ᴄᴏᴘʏʀɪɢʜᴛ ɪꜱꜱᴜᴇꜱ).</b>\n<blockquote><b><i>📌 ᴘʟᴇᴀꜱᴇ ꜰᴏʀᴡᴀʀᴅ ᴛʜɪꜱ ᴠɪᴅᴇᴏ / ꜰɪʟᴇ ᴛᴏ ꜱᴏᴍᴇᴡʜᴇʀᴇ ᴇʟꜱᴇ ᴀɴᴅ ꜱᴛᴀʀᴛ ᴅᴏᴡɴʟᴏᴀᴅɪɴɢ ᴛʜᴇʀᴇ.</i></b></blockquote>")
-    try:
-        await syd.delete()
-    except:
-        pass
-    await db.remove_stored_file_id(message.from_user.id)
-    await asyncio.sleep(600)
-    await msg.delete()
-    await k.edit_text("<blockquote><b>ʏᴏᴜʀ ᴠɪᴅᴇᴏ / ꜰɪʟᴇ ɪꜱ ꜱᴜᴄᴄᴇꜱꜱꜰᴜʟʟʏ ᴅᴇʟᴇᴛᴇᴅ !!\n\nᴄʟɪᴄᴋ ʙᴇʟᴏᴡ ʙᴜᴛᴛᴏɴ ᴛᴏ ɢᴇᴛ ʏᴏᴜʀ ᴅᴇʟᴇᴛᴇᴅ ᴠɪᴅᴇᴏ / ꜰɪʟᴇ 👇</b></blockquote>",reply_markup=InlineKeyboardMarkup(btn))
-    return
+        btn = [[
+            InlineKeyboardButton("! ɢᴇᴛ ꜰɪʟᴇ ᴀɢᴀɪɴ !", callback_data=f'delfile#{file_id}')
+        ]]
+        k = await client.send_message(chat_id = message.from_user.id, text=f"<b>❗️ <u>ɪᴍᴘᴏʀᴛᴀɴᴛ</u> ❗️</b>\n\n<b>ᴛʜɪꜱ ᴠɪᴅᴇᴏ / ꜰɪʟᴇ ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇᴅ ɪɴ</b> <b><u>10 ᴍɪɴᴜᴛᴇꜱ</u> </b><b>(ᴅᴜᴇ ᴛᴏ ᴄᴏᴘʏʀɪɢʜᴛ ɪꜱꜱᴜᴇꜱ).</b>\n<blockquote><b><i>📌 ᴘʟᴇᴀꜱᴇ ꜰᴏʀᴡᴀʀᴅ ᴛʜɪꜱ ᴠɪᴅᴇᴏ / ꜰɪʟᴇ ᴛᴏ ꜱᴏᴍᴇᴡʜᴇʀᴇ ᴇʟꜱᴇ ᴀɴᴅ ꜱᴛᴀʀᴛ ᴅᴏᴡɴʟᴏᴀᴅɪɴɢ ᴛʜᴇʀᴇ.</i></b></blockquote>")
+        try:
+            await syd.delete()
+        except:
+            pass
+        await db.remove_stored_file_id(message.from_user.id)
+        await asyncio.sleep(600)
+        await msg.delete()
+        await k.edit_text("<blockquote><b>ʏᴏᴜʀ ᴠɪᴅᴇᴏ / ꜰɪʟᴇ ɪꜱ ꜱᴜᴄᴄᴇꜱꜱꜰᴜʟʟʏ ᴅᴇʟᴇᴛᴇᴅ !!\n\nᴄʟɪᴄᴋ ʙᴇʟᴏᴡ ʙᴜᴛᴛᴏɴ ᴛᴏ ɢᴇᴛ ʏᴏᴜʀ ᴅᴇʟᴇᴛᴇᴅ ᴠɪᴅᴇᴏ / ꜰɪʟᴇ 👇</b></blockquote>",reply_markup=InlineKeyboardMarkup(btn))
+        return
 
 #@Client.on_chat_join_request(filters.chat(SYD_CHANNEL))
 async def join_reqqs(client, message: ChatJoinRequest):
