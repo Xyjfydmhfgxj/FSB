@@ -45,6 +45,7 @@ class Database:
         self.all = self.db.filed
         self.syd = self.db.bots
         self.words = self.db.words
+        self.fsub_col = self.db.fsub_col
         
 
 
