@@ -357,6 +357,11 @@ async def jreq_menu(client, message):
         [InlineKeyboardButton("❌ Remove Channel from All Users", callback_data="jrq:remove")],
         [InlineKeyboardButton("❌ Delete ALL Join-Requests", callback_data="jrq:del_all")],
         [InlineKeyboardButton("📊 View Count", callback_data="jrq:count")],
+        [InlineKeyboardButton("➕ Add Channel", callback_data="fsub_add")],
+        [InlineKeyboardButton("🗑 Remove One", callback_data="fsub_remove_one")],
+        [InlineKeyboardButton("❌ Clear All", callback_data="fsub_clear")],
+        [InlineKeyboardButton("📄 View List", callback_data="fsub_view")],
+        [InlineKeyboardButton("✖ Close", callback_data="fsub_close")]
     ])
 
     await message.reply(
@@ -364,7 +369,82 @@ async def jreq_menu(client, message):
         reply_markup=keyboard
     )
 
+@Client.on_callback_query(filters.regex("^bot_fsub_back$") & filters.user(ADMINS))
+async def fsub_back(client, cb):
+    await jreq_menu(client, cb.message)
+    await cb.message.delete()
 
+@Client.on_callback_query(filters.regex("^fsub_del_") & filters.user(ADMINS))
+async def fsub_delete_one(client, cb):
+    chat_id = int(cb.data.split("_")[-1])
+    await db.remove_fsub_channel(chat_id)
+    modified = await db.remove_channel_from_all_users(channel_id)
+    await cb.message.edit_text(f"✅ Removed `{chat_id}`, `{modified}` from force-sub list.")
+    
+
+@Client.on_callback_query(filters.regex("^fsub_") & filters.user(ADMINS))
+async def fsub_callbacks(client, cb):
+    data = cb.data
+    if data == "fsub_close":
+        return await cb.message.delete()
+
+    if data == "fsub_view":
+        channels = await db.get_fsub_list()
+        if not channels:
+            return await cb.answer("No force-sub channels set", show_alert=True)
+
+        text = "📄 **Force-Sub Channels:**\n\n"
+        for ch in channels:
+            text += f"`{ch}`\n"
+
+        return await cb.message.edit_text(text)
+
+    if data == "fsub_clear":
+        await db.clear_fsub()
+        await db.del_all_join_req()
+        return await cb.message.edit_text("✅ Force-sub list cleared.")
+
+    if data == "fsub_add":
+        await cb.message.edit_text(
+            "➕ **Send channel ID or forward a channel message**\n\n"
+            "Use /cancel to abort."
+        )
+
+        try:
+            msg = await client.listen(cb.from_user.id, timeout=120)
+        except:
+            return await cb.message.edit_text("⏳ Timeout.")
+
+        if msg.text and msg.text.lower() == "/cancel":
+            return await cb.message.edit_text("❌ Cancelled.")
+
+        if msg.forward_from_chat:
+            chat_id = msg.forward_from_chat.id
+        else:
+            try:
+                chat_id = int(msg.text.strip())
+            except:
+                return await cb.message.edit_text("❌ Invalid channel ID.")
+
+        await db add_fsub_channel(chat_id)
+        return await cb.message.edit_text(f"✅ Added `{chat_id}` to force-sub list.")
+    
+    if data == "fsub_remove_one":
+        channels = await db.get_fsub_list()
+        if not channels:
+            return await cb.answer("List is empty", show_alert=True)
+
+        btn = [
+            [InlineKeyboardButton(str(ch), callback_data=f"fsub_del_{ch}")]
+            for ch in channels
+        ]
+        btn.append([InlineKeyboardButton("⬅ Back", callback_data="bot_fsub_back")])
+
+        return await cb.message.edit_text(
+            "🗑 **Select channel to remove**",
+            reply_markup=InlineKeyboardMarkup(btn)
+        )
+        
 @Client.on_message(filters.command("jreq_user") & filters.user(ADMINS))
 async def jreq_user_info(client, message):
     if len(message.command) < 2:
