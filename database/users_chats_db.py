@@ -100,24 +100,24 @@ class Database:
     async def del_all_join_req(self):
         await self.req.drop()
 
-    async def get_fsub_list():
+    async def get_fsub_list(self):
         data = await self.fsub_col.find_one({"_id": "FSUB"})
         return data["channels"] if data else []
 
-    async def add_fsub_channel(chat_id: int):
+    async def add_fsub_channel(self, chat_id: int):
         await self.fsub_col.update_one(
             {"_id": "FSUB"},
             {"$addToSet": {"channels": chat_id}},
             upsert=True
         )
 
-    async def remove_fsub_channel(chat_id: int):
+    async def remove_fsub_channel(self, chat_id: int):
         await self.fsub_col.update_one(
             {"_id": "FSUB"},
             {"$pull": {"channels": chat_id}}
         )
 
-    async def clear_fsub():
+    async def clear_fsub(self):
         await self.fsub_col.delete_one({"_id": "FSUB"})
     
         
