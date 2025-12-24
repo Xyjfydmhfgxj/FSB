@@ -15,6 +15,7 @@
  googletrans==3.1.0a0
  dateparser
  pyrofork==2.3.43
+ rapidfuzz
 
 #---master---# 
  #Telethroid==0.0.10 
