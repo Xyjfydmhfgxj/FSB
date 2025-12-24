@@ -12,6 +12,7 @@ from database.connections_mdb import active_connection, all_connections, delete_
     make_inactive
 from urllib.parse import quote_plus
 from info import *
+from rapidfuzz import fuzz
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, InputMediaPhoto
 from pyrogram import Client, filters, enums
 from pyrogram.errors import FloodWait, UserIsBlocked, MessageNotModified, PeerIdInvalid
