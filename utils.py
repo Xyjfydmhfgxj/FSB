@@ -89,7 +89,8 @@ async def is_req_subscribed(bot, query, syd=AUTH_CHANNEL):
     return False
 
 
-async def get_authchannel(bot, query, auth_list):
+async def get_authchannel(bot, query):
+    auth_list = await bd.get_fsub_list()
     user_id = query.from_user.id
     doc = await bd.syd_user(user_id)  # expects {"_id": id, "channels": [...], "count": n, "time": ts} or None
     now = int(time.time())
