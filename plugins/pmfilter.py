@@ -2883,6 +2883,21 @@ async def auto_fter(client, msg, spoll=False):
                 await mrsyd.delete()
             await message.delete()
 
+def normalize_text(text: str) -> str:
+    return re.sub(r'[^a-z0-9]', '', text.lower())
+    
+def fuzzy_filter(query, candidates, threshold=70):
+    q = normalize_text(query)
+    results = []
+
+    for c in candidates:
+        score = fuzz.ratio(q, normalize_text(c))
+        if score >= threshold:
+            results.append((score, c))
+
+    results.sort(reverse=True)
+    return [c for _, c in results]
+    
 async def advantage_spell_chok(client, msg):
     bot = client
     mv_id = msg.id
@@ -2941,7 +2956,12 @@ async def advantage_spell_chok(client, msg):
                 if imdb_s:
                     movielist += [movie.get('title') for movie in imdb_s]
         movielist += [(re.sub(r'(\-|\(|\)|_)', '', i, flags=re.IGNORECASE)).strip() for i in gs_parsed]
-        movielist = list(dict.fromkeys(movielist))  # removing duplicates
+        fuzzy_matches = fuzzy_filter(mv_rqst, movielist, threshold=65)
+
+        if fuzzy_matches:
+            movielist = fuzzy_matches
+        else:
+            movielist = list(dict.fromkeys(movielist))
         if not movielist:
             reqst_gle = query.replace(" ", "+")
             button = [[
