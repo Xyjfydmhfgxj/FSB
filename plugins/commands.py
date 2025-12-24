@@ -394,8 +394,7 @@ async def start(client, message):
     if AUTH_CHANNEL:
         try:
             # Fetch subscription statuses once
-            fsub, ch1, ch2 = await get_authchannel(client, message, AUTH_CHANNEL)
-            #is_req_sub = await is_req_subscribed(client, message, AUTH_CHANNEL)
+            fsub, ch1, ch2 = await get_authchannel(client, message)    #is_req_sub = await is_req_subscribed(client, message, AUTH_CHANNEL)
             #is_req_sub2 = await is_req_subscribed(client, message, SYD_CHANNEL)
             is_sub = await is_subscribed(client, message)
 
