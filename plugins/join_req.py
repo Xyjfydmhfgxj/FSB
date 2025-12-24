@@ -539,7 +539,11 @@ async def join_reqs(client, message: ChatJoinRequest):
         messyd = int(data["mess"])
         is_sub = await is_subscribed(client, message)
         fsub, ch1, ch2 = await get_authchannel(client, message)
-        if not (fsub and is_sub):
+        try:
+            syd = await client.get_messages(chat_id=message.from_user.id, message_ids=messyd)
+        except:
+            syd = None
+        if not (fsub and is_sub) and syd:
             try:
                 invite_link, invite_link2 = None, None
                 if ch1:
@@ -560,21 +564,15 @@ async def join_reqs(client, message: ChatJoinRequest):
             if not is_sub:
                 btn.append([InlineKeyboardButton("⊛ Jᴏɪɴ Uᴘᴅᴀᴛᴇꜱ CʜᴀɴɴᴇL ³⊛", url=f"https://t.me/{FSUB_UNAME}")])
                   
-            if len(message.command) > 1 and message.command[1] != "subscribe":
-                try:
-                    kk, file_id = message.command[1].split("_", 1)
-                    btn.append([InlineKeyboardButton("↻ Tʀʏ Aɢᴀɪɴ ↻", callback_data=f"checksub#{kk}#{file_id}")])
-                except (IndexError, ValueError):
-                    btn.append([InlineKeyboardButton("↻ Tʀʏ Aɢᴀɪɴ ↻", url=f"https://t.me/{temp.U_NAME}?start={message.command[1]}")])
-
-                sydback = await client.edit_message_text(
-                    chat_id=message.from_user.id,
-                    message_id=messyd,
-                    text="<b>Jᴏɪɴ Oᴜʀ Uᴘᴅᴀᴛᴇꜱ Cʜᴀɴɴᴇʟ</b> Aɴᴅ Tʜᴇɴ Cʟɪᴄᴋ Oɴ Tʀʏ Aɢᴀɪɴ Tᴏ Gᴇᴛ Yᴏᴜʀ Rᴇǫᴜᴇꜱᴛᴇᴅ Fɪʟᴇ.",
-                    reply_markup=InlineKeyboardMarkup(btn),
-                    parse_mode=enums.ParseMode.HTML
-                )
-                return
+            
+            btn.append([InlineKeyboardButton("↻ Tʀʏ Aɢᴀɪɴ ↻", callback_data=f"checksub##{file_iid}")])
+                
+            await syd.edit_texf(
+                text="<b>Jᴏɪɴ Oᴜʀ Uᴘᴅᴀᴛᴇꜱ Cʜᴀɴɴᴇʟ</b> Aɴᴅ Tʜᴇɴ Cʟɪᴄᴋ Oɴ Tʀʏ Aɢᴀɪɴ Tᴏ Gᴇᴛ Yᴏᴜʀ Rᴇǫᴜᴇꜱᴛᴇᴅ Fɪʟᴇ.",
+                reply_markup=InlineKeyboardMarkup(btn),
+                parse_mode=enums.ParseMode.HTML
+            )
+            return
         try:
             files_ = await get_file_details(file_id)
             f_caption = None
@@ -594,9 +592,8 @@ async def join_reqs(client, message: ChatJoinRequest):
                         )
                     except:
                         pass
-            syd = await client.get_messages(chat_id=message.from_user.id, message_ids=messyd)
         except:
-            syd = None
+            pass
         msg = await client.send_cached_media(
             chat_id=message.from_user.id,
             file_id=file_id,
