@@ -372,7 +372,7 @@ async def fsub_back(client, cb):
     await jreq_menu(client, cb.message)
     await cb.message.delete()
 
-@Client.on_callback_query(filters.regex("^fsyd_del_") & filters.user(ADMINS))
+@Client.on_callback_query(filters.regex("^fsud_del_") & filters.user(ADMINS))
 async def fsub_delet_one(client, cb):
     chat_id = int(cb.data.split("_")[-1])
     await db.remove_fsub_channel(chat_id)
@@ -409,7 +409,7 @@ async def fsub_callacks(client, cb):
         )
 
         try:
-            msg = await client.listen(cb.message.from_user.id, timeout=120)
+            msg = await client.listen(cb.from_user.id, timeout=120)
         except:
             return await cb.message.edit_text("⏳ Timeout.")
 
@@ -433,7 +433,7 @@ async def fsub_callacks(client, cb):
             return await cb.answer("List is empty", show_alert=True)
 
         btn = [
-            [InlineKeyboardButton(str(ch), callback_data=f"fsub_del_{ch}")]
+            [InlineKeyboardButton(str(ch), callback_data=f"fsud_del_{ch}")]
             for ch in channels
         ]
         btn.append([InlineKeyboardButton("⬅ Back", callback_data="bot_fsub_back")])
@@ -479,7 +479,7 @@ async def jreq_user_info(client, message):
   
     
 # Step 2: In a general handler
-@Client.on_message(filters.forwarded)
+@Client.on_message(filters.forwarded & filters.group)
 async def handle_forwarded(client, message):
     group_id = message.chat.id
     user_id = message.from_user.id
