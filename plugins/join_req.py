@@ -153,9 +153,7 @@ class Database:
         return doc.get("users", []) if doc else []
 
 
-@Client.on_chat_join_request(
-    ~filters.chat(AUTH_CHANNEL)
-)
+
 async def handle_join_request(client: Client, message: ChatJoinRequest):
     user_id = message.from_user.id
     channel_id = message.chat.id  # The channel they're trying to join
@@ -522,8 +520,12 @@ async def handle_forwarded(client, message):
     await asyncio.sleep(600)
     await syd.delete()
     
-@Client.on_chat_join_request(filters.chat(AUTH_CHANNEL))
+@Client.on_chat_join_request()
 async def join_reqs(client, message: ChatJoinRequest):
+  authchnl = await db.get_fsub_list()
+  if not await in authchnl:
+      await handle_join_request(client, message)
+      return
   try:
       await db.add_join_req(message.from_user.id, message.chat.id)
   except Exception as e:
