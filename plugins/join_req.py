@@ -523,7 +523,7 @@ async def handle_forwarded(client, message):
 @Client.on_chat_join_request()
 async def join_reqs(client, message: ChatJoinRequest):
   authchnl = await db.get_fsub_list()
-  if message.chat.id not await in authchnl:
+  if message.chat.id not in authchnl:
       await handle_join_request(client, message)
       return
   try:
