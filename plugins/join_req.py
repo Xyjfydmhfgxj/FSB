@@ -2,7 +2,7 @@ from pyrogram import Client, filters, enums
 from pyrogram.types import ChatJoinRequest, Message, InlineKeyboardMarkup, InlineKeyboardButton
 from database.users_chats_db import bd as db
 from info import ADMINS, SYD_URI, SYD_NAME, SYD_CHANNEL, AUTH_CHANNEL, CUSTOM_FILE_CAPTION
-from utils import extract_audio_subtitles_formatted, get_size
+from utils import extract_audio_subtitles_formatted, get_size, get_authchannel, is_subscribed
 from database.ia_filterdb import get_file_details
 from motor.motor_asyncio import AsyncIOMotorClient
 from pyrogram.enums import ChatMemberStatus
@@ -450,9 +450,50 @@ async def join_reqs(client, message: ChatJoinRequest):
       await client.send_message(1733124290, e)
   data = await db.get_stored_file_id(message.from_user.id)
   if data:
-    file_id = data["file_id"]
-    messyd = int(data["mess"])
-     
+      file_id = data["file_id"]
+      messyd = int(data["mess"])
+      is_sub = await is_subscribed(client, message)
+      fsub, ch1, ch2 = await get_authchannel(client, message)
+      if not (fsub and is_sub):
+          try:
+              invite_link, invite_link2 = None, None
+              if ch1:
+                  invite_link = await client.create_chat_invite_link(int(ch1), creates_join_request=True)
+              if ch2:
+                  invite_link2 = await client.create_chat_invite_link(int(ch2), creates_join_request=True)
+          except ChatAdminRequired:
+              logger.error("Make sure Bot is admin in Forcesub channel")
+              return
+                
+          btn = []
+
+          if invite_link:
+              btn.append([InlineKeyboardButton("⊛ Jᴏɪɴ Uᴘᴅᴀᴛᴇꜱ CʜᴀɴɴᴇL ¹⊛", url=invite_link.invite_link)])
+ 
+          if invite_link2:
+              btn.append([InlineKeyboardButton("⊛ Jᴏɪɴ Uᴘᴅᴀᴛᴇꜱ CʜᴀɴɴᴇL ²⊛", url=invite_link2.invite_link)])
+                
+          if not is_sub:
+              btn.append([InlineKeyboardButton("⊛ Jᴏɪɴ Uᴘᴅᴀᴛᴇꜱ CʜᴀɴɴᴇL ³⊛", url=f"https://t.me/{FSUB_UNAME}")])
+                  
+          if len(message.command) > 1 and message.command[1] != "subscribe":
+              try:
+                  kk, file_id = message.command[1].split("_", 1)
+                  btn.append([InlineKeyboardButton("↻ Tʀʏ Aɢᴀɪɴ ↻", callback_data=f"checksub#{kk}#{file_id}")])
+              except (IndexError, ValueError):
+                  btn.append([InlineKeyboardButton("↻ Tʀʏ Aɢᴀɪɴ ↻", url=f"https://t.me/{temp.U_NAME}?start={message.command[1]}")])
+
+              sydback = await client.edit_message_text(
+                  chat_id=message.from_user.id,
+                  message_id=msg.id,
+                  text="<b>Jᴏɪɴ Oᴜʀ Uᴘᴅᴀᴛᴇꜱ Cʜᴀɴɴᴇʟ</b> Aɴᴅ Tʜᴇɴ Cʟɪᴄᴋ Oɴ Tʀʏ Aɢᴀɪɴ Tᴏ Gᴇᴛ Yᴏᴜʀ Rᴇǫᴜᴇꜱᴛᴇᴅ Fɪʟᴇ.",
+                  reply_markup=InlineKeyboardMarkup(btn),
+                  parse_mode=enums.ParseMode.HTML
+              )
+              return
+        except Exception as e:
+            await message.reply(f"⚠️ ᴇʀʀᴏʀ ꜱᴇɴᴅɪɴɢ ꜰɪʟᴇ (Fsub): {e}")
+    
     try:
         files_ = await get_file_details(file_id)
         if files_:
