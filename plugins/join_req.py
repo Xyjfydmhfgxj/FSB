@@ -567,15 +567,14 @@ async def join_reqs(client, message: ChatJoinRequest):
 
               sydback = await client.edit_message_text(
                   chat_id=message.from_user.id,
-                  message_id=msg.id,
+                  message_id=messyd,
                   text="<b>Jᴏɪɴ Oᴜʀ Uᴘᴅᴀᴛᴇꜱ Cʜᴀɴɴᴇʟ</b> Aɴᴅ Tʜᴇɴ Cʟɪᴄᴋ Oɴ Tʀʏ Aɢᴀɪɴ Tᴏ Gᴇᴛ Yᴏᴜʀ Rᴇǫᴜᴇꜱᴛᴇᴅ Fɪʟᴇ.",
                   reply_markup=InlineKeyboardMarkup(btn),
                   parse_mode=enums.ParseMode.HTML
               )
               return
-        except Exception as e:
-            await message.reply(f"⚠️ ᴇʀʀᴏʀ ꜱᴇɴᴅɪɴɢ ꜰɪʟᴇ (Fsub): {e}")
-    
+         except Exception as e:
+             await message.reply(f"⚠️ ᴇʀʀᴏʀ ꜱᴇɴᴅɪɴɢ ꜰɪʟᴇ (Fsub): {e}")
     try:
         files_ = await get_file_details(file_id)
         if files_:
