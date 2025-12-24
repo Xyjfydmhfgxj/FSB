@@ -2919,21 +2919,21 @@ async def advantage_spell_chok(client, msg):
         g_s = await search_gagala(query)
         g_s += await search_gagala(msg.text)
         gs_parsed = []
-        if not g_s:
-            reqst_gle = query.replace(" ", "+")
-            button = [[
-                       InlineKeyboardButton("📝 ʀᴇǫᴜᴇꜱᴛ ʜᴇʀᴇ", url=f"https://t.me/+utIipIkwcA0zYmFl")
-            ]]
-            if NO_RESULTS_MSG:
-                await bot.send_message(chat_id=6727173021, text=mv_rqst)
-                await client.send_message(chat_id=LOG_CHANNEL, text=(script.NORSLTS.format(reqstr.id, reqstr.mention, mv_rqst)))
-            k = await msg.reply_text(
-                text=script.I_CUDNT.format(mv_rqst),
-                reply_markup=InlineKeyboardMarkup(button)
-            )
-            await asyncio.sleep(30)
-            await k.delete()
-            return
+     #   if not g_s:
+          #  reqst_gle = query.replace(" ", "+")
+          #  button = [[
+          #             InlineKeyboardButton("📝 ʀᴇǫᴜᴇꜱᴛ ʜᴇʀᴇ", url=f"https://t.me/+utIipIkwcA0zYmFl")
+        #    ]]
+         #   if NO_RESULTS_MSG:
+          #      await bot.send_message(chat_id=6727173021, text=mv_rqst)
+          #      await client.send_message(chat_id=LOG_CHANNEL, text=(script.NORSLTS.format(reqstr.id, reqstr.mention, mv_rqst)))
+            #k = await msg.reply_text(
+           #     text=script.I_CUDNT.format(mv_rqst),
+          #      reply_markup=InlineKeyboardMarkup(button)
+         #   )
+        #    await asyncio.sleep(30)
+         #   await k.delete()
+        #    return
         regex = re.compile(r".*(imdb|wikipedia).*", re.IGNORECASE)  # look for imdb / wiki results
         gs = list(filter(regex.match, g_s))
         gs_parsed = [re.sub(
