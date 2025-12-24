@@ -6,6 +6,7 @@
  umongo==3.1.0 
  requests 
  bs4==0.0.1 
+ cinemagoer
  git+https://github.com/Joelkb/cinemagoer 
  shortzy 
  datetime 
