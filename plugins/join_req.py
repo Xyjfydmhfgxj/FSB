@@ -424,7 +424,7 @@ async def fsub_callbacks(client, cb):
             except:
                 return await cb.message.edit_text("❌ Invalid channel ID.")
 
-        await db add_fsub_channel(chat_id)
+        await db.add_fsub_channel(chat_id)
         return await cb.message.edit_text(f"✅ Added `{chat_id}` to force-sub list.")
     
     if data == "fsub_remove_one":
