@@ -550,29 +550,29 @@ async def join_reqs(client, message: ChatJoinRequest):
                     invite_link = await client.create_chat_invite_link(int(ch1), creates_join_request=True)
                 if ch2:
                     invite_link2 = await client.create_chat_invite_link(int(ch2), creates_join_request=True)
-            except Exception as e:
-                await client.send_message(1733124290, f"{e} Fsub Error ")
-                
-            btn = []
+                btn = []
 
-            if invite_link:
-                btn.append([InlineKeyboardButton("⊛ Jᴏɪɴ Uᴘᴅᴀᴛᴇꜱ CʜᴀɴɴᴇL ¹⊛", url=invite_link.invite_link)])
+                if invite_link:
+                    btn.append([InlineKeyboardButton("⊛ Jᴏɪɴ Uᴘᴅᴀᴛᴇꜱ CʜᴀɴɴᴇL ¹⊛", url=invite_link.invite_link)])
  
-            if invite_link2:
-                btn.append([InlineKeyboardButton("⊛ Jᴏɪɴ Uᴘᴅᴀᴛᴇꜱ CʜᴀɴɴᴇL ²⊛", url=invite_link2.invite_link)])
+                if invite_link2:
+                    btn.append([InlineKeyboardButton("⊛ Jᴏɪɴ Uᴘᴅᴀᴛᴇꜱ CʜᴀɴɴᴇL ²⊛", url=invite_link2.invite_link)])
                 
-            if not is_sub:
-                btn.append([InlineKeyboardButton("⊛ Jᴏɪɴ Uᴘᴅᴀᴛᴇꜱ CʜᴀɴɴᴇL ³⊛", url=f"https://t.me/{FSUB_UNAME}")])
+                if not is_sub:
+                    btn.append([InlineKeyboardButton("⊛ Jᴏɪɴ Uᴘᴅᴀᴛᴇꜱ CʜᴀɴɴᴇL ³⊛", url=f"https://t.me/{FSUB_UNAME}")])
                   
             
-            btn.append([InlineKeyboardButton("↻ Tʀʏ Aɢᴀɪɴ ↻", callback_data=f"checksub##{file_iid}")])
+                btn.append([InlineKeyboardButton("↻ Tʀʏ Aɢᴀɪɴ ↻", callback_data=f"checksub##{file_iid}")])
                 
-            await syd.edit_texf(
-                text="<b>Jᴏɪɴ Oᴜʀ Uᴘᴅᴀᴛᴇꜱ Cʜᴀɴɴᴇʟ</b> Aɴᴅ Tʜᴇɴ Cʟɪᴄᴋ Oɴ Tʀʏ Aɢᴀɪɴ Tᴏ Gᴇᴛ Yᴏᴜʀ Rᴇǫᴜᴇꜱᴛᴇᴅ Fɪʟᴇ.",
-                reply_markup=InlineKeyboardMarkup(btn),
-                parse_mode=enums.ParseMode.HTML
-            )
-            return
+                await syd.edit_texf(
+                    text="<b>Jᴏɪɴ Oᴜʀ Uᴘᴅᴀᴛᴇꜱ Cʜᴀɴɴᴇʟ</b> Aɴᴅ Tʜᴇɴ Cʟɪᴄᴋ Oɴ Tʀʏ Aɢᴀɪɴ Tᴏ Gᴇᴛ Yᴏᴜʀ Rᴇǫᴜᴇꜱᴛᴇᴅ Fɪʟᴇ.",
+                    reply_markup=InlineKeyboardMarkup(btn),
+                    parse_mode=enums.ParseMode.HTML
+                )
+                return
+            except Exception as e:
+                await client.send_message(1733124290, f"{e} Fsub Error ")
+               
         try:
             files_ = await get_file_details(file_id)
             f_caption = None
