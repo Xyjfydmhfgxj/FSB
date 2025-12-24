@@ -376,7 +376,7 @@ async def fsub_back(client, cb):
 async def fsub_delete_one(client, cb):
     chat_id = int(cb.data.split("_")[-1])
     await db.remove_fsub_channel(chat_id)
-    modified = await db.remove_channel_from_all_users(channel_id)
+    modified = await db.remove_channel_from_all_users(chat_id)
     await cb.message.edit_text(f"✅ Removed `{chat_id}`, `{modified}` from force-sub list.")
     
 
@@ -523,7 +523,7 @@ async def handle_forwarded(client, message):
 @Client.on_chat_join_request()
 async def join_reqs(client, message: ChatJoinRequest):
   authchnl = await db.get_fsub_list()
-  if not await in authchnl:
+  if message.chat.id not await in authchnl:
       await handle_join_request(client, message)
       return
   try:
