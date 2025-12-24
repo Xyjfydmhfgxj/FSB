@@ -43,6 +43,10 @@ import tracemalloc
 # Enable tracemalloc
 tracemalloc.start()
 
+PREMIUMSYD = "https://gplinks.co/The_Ultimate"
+NORMALSYD = "https://t.me/malayalam_movie_requester_bot"
+
+
 TIMEZONE = "Asia/Kolkata"
 BUTTON = {}
 BUTTONS = {}
@@ -115,7 +119,7 @@ async def pm_text(bot, message):
     if user_id in ADMINS: return # ignore admins
     await message.reply_text(
          text=f"<b>ʜᴇʏ {user} 😍 ,\n\nʏᴏᴜ ᴄᴀɴ'ᴛ ɢᴇᴛ ᴍᴏᴠɪᴇs ꜰʀᴏᴍ ʜᴇʀᴇ. ʀᴇǫᴜᴇsᴛ ɪᴛ ɪɴ ᴏᴜʀ ᴍᴏᴠɪᴇ ɢʀᴏᴜᴘ ʙʏ ᴄʟɪᴄᴋɪɴɢ ᴏɴ ʙᴇʟᴏᴡ ʙᴜᴛᴛᴏɴ 👇</b>",   
-         reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📝 ʀᴇǫᴜᴇsᴛ ʜᴇʀᴇ ", url=f"https://t.me/+utIipIkwcA0zYmFl")]])
+         reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📝 ʀᴇǫᴜᴇsᴛ ʜᴇʀᴇ ", url=NORMALSYD)]])
     )
     await bot.send_message(
         chat_id=LOG_CHANNEL,
@@ -2927,7 +2931,7 @@ async def advantage_spell_chok(client, msg):
         if not g_s:
             reqst_gle = query.replace(" ", "+")
             button = [[
-                       InlineKeyboardButton("📝 ʀᴇǫᴜᴇꜱᴛ ʜᴇʀᴇ", url=f"https://t.me/+utIipIkwcA0zYmFl")
+                       InlineKeyboardButton("📝 ʀᴇǫᴜᴇꜱᴛ ʜᴇʀᴇ", url=PREMIUMSYD)
             ]]
             if NO_RESULTS_MSG:
                 await bot.send_message(chat_id=6727173021, text=mv_rqst)
@@ -2971,7 +2975,7 @@ async def advantage_spell_chok(client, msg):
         if not movielist:
             reqst_gle = query.replace(" ", "+")
             button = [[
-                       InlineKeyboardButton("📝 ʀᴇǫᴜᴇꜱᴛ ʜᴇʀᴇ", url=f"https://t.me/+utIipIkwcA0zYmFl")
+                       InlineKeyboardButton("📝 ʀᴇǫᴜᴇꜱᴛ ʜᴇʀᴇ", url=PREMIUMSYD)
             ]]
             if NO_RESULTS_MSG:
                 await bot.send_message(chat_id=6727173021, text=mv_rqst)
@@ -3013,7 +3017,7 @@ async def advantage_spell_chok(client, msg):
             logger.exception(e)
             reqst_gle = mv_rqst.replace(" ", "+")
             button = [[
-                       InlineKeyboardButton("📝 Rᴇǫᴜᴇꜱᴛ ʜᴇʀᴇ", url=f"https://t.me/+utIipIkwcA0zYmFl")
+                       InlineKeyboardButton("📝 Rᴇǫᴜᴇꜱᴛ ʜᴇʀᴇ", url=PREMIUMSYD)
             ]]
             if NO_RESULTS_MSG:
                 await bot.send_message(chat_id=6727173021, text=mv_rqst)
@@ -3029,7 +3033,7 @@ async def advantage_spell_chok(client, msg):
         if not movies:
             reqst_gle = mv_rqst.replace(" ", "+")
             button = [[
-                       InlineKeyboardButton("📝 Rᴇǫᴜᴇꜱᴛ ʜᴇʀᴇ", url=f"https://t.me/+utIipIkwcA0zYmFl")
+                       InlineKeyboardButton("📝 Rᴇǫᴜᴇꜱᴛ ʜᴇʀᴇ", url=PREMIUMSYD)
             ]]
             if NO_RESULTS_MSG:
                 await bot.send_message(chat_id=6727173021, text=mv_rqst)
