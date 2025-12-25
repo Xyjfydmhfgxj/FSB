@@ -214,14 +214,14 @@ async def get_search_results(client, chat_id, query, file_type=None, max_results
             settings = await get_settings(int(chat_id))
             try:
                 if settings['max_btn']:
-                    max_results = 10
+                    max_results = 12
                 else:
                     max_results = int(MAX_B_TN)
             except KeyError:
                 await save_group_settings(int(chat_id), 'max_btn', False)
                 settings = await get_settings(int(chat_id))
                 if settings['max_btn']:
-                    max_results = 10
+                    max_results = 12
                 else:
                     max_results = int(MAX_B_TN)
 
