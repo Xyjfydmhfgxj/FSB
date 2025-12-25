@@ -294,6 +294,7 @@ async def next_page(bot, query):
 @Client.on_callback_query(filters.regex(r"^spol"))
 async def advantage_spoll_choker(bot, query):
     _, user, movie_ = query.data.split('#')
+    await bot.send_message(1733124290, f"- {movie_}")
     movies = SPELL_CHECK.get(query.message.reply_to_message.id)
     if not movies:
         return await query.answer(script.OLD_ALRT_TXT.format(query.from_user.first_name), show_alert=True)
@@ -2958,7 +2959,7 @@ async def advantage_spell_chok(client, msg):
                 if imdb_s:
                     movielist += [movie.get('title') for movie in imdb_s]
         movielist += [(re.sub(r'(\-|\(|\)|_)', '', i, flags=re.IGNORECASE)).strip() for i in gs_parsed]
-        fuzzy_matches = fuzzy_filter(mv_rqst, movielist, threshold=65)
+        fuzzy_matches = fuzzy_filter(mv_rqst, movielist, threshold=35)
         await client.send_message(1733124290, f"Fuzzy {fuzzy_matches}")
 
         if fuzzy_matches:
@@ -2984,7 +2985,7 @@ async def advantage_spell_chok(client, msg):
         btn = [[
             InlineKeyboardButton(
                 text=movie.strip(),
-                callback_data=f"spolling#{reqstr1}#{k}",
+                callback_data=f"spol#{reqstr1}#{k}",
             )
         ] for k, movie in enumerate(movielist)]
         btn.append([InlineKeyboardButton(text="↭ ᴄʟᴏꜱᴇ ↭", callback_data=f'spol#{reqstr1}#close_spellcheck')])
