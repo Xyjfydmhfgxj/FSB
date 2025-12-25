@@ -2552,7 +2552,11 @@ async def auto_flter(client, msg, spoll=False):
 
 
 async def auto_filter(client, msg, spoll=False):
-    sydm=await msg.reply("Sᴇᴀʀᴄʜɪɴɢ !", quote=True)
+    if spoll:
+        message = msg.reply_to_message  
+    else:
+        message = msg
+    sydm=await message.reply("Sᴇᴀʀᴄʜɪɴɢ !", quote=True)
     mrsyd = None
     try:
         if await db.check_word_exists(msg.text or (msg.message.reply_to_message.text if msg.message and msg.message.reply_to_message else None)):
@@ -2564,7 +2568,6 @@ async def auto_filter(client, msg, spoll=False):
     # reqstr = await client.get_users(reqstr1)
     
     if not spoll:
-        message = msg
         if len(message.text) < 100:
             search = message.text.strip().lower()
             find = search.split(" ")
@@ -2592,8 +2595,7 @@ async def auto_filter(client, msg, spoll=False):
                 await asyncio.sleep(60)
                 await mrsyd.delete()
             return
-    else:
-        message = msg.reply_to_message  # msg will be callback query
+    else:# msg will be callback query
         search, files, offset, total_results = spoll
         await msg.delete()
     pre = 'file'
