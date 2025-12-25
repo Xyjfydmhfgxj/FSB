@@ -306,6 +306,7 @@ async def advantage_spoll_choker(bot, query):
     await bot.send_message(1733124290, f"- {movie}")
     movie = re.sub(r"[:\-]", " ", movie)
     movie = re.sub(r"\s+", " ", movie).strip()
+    movie = clean_text(movie)
     await bot.send_message(1733124290, f"- {movie}")
     await query.answer(script.TOP_ALRT_MSG)
     gl = await global_filters(bot, query.message, text=movie)
