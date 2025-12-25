@@ -311,12 +311,15 @@ async def advantage_spoll_choker(bot, query):
     await query.answer(script.TOP_ALRT_MSG)
     gl = await global_filters(bot, query.message, text=movie)
     if gl == False:
+        await bot.send_message(1733124290, f"- 1{movie}")
         k = await manual_filters(bot, query.message, text=movie)
         if k == False:
+            await bot.send_message(1733124290, f"- 2 {movie}")
             files, offset, total_results = await get_search_results(bot, query.message.chat.id, movie, offset=0, filter=True)
             if files:
+                await bot.send_message(1733124290, f"- 3{movie}")
                 k = (movie, files, offset, total_results)
-                await auto_filter(bot, query, k)
+                await auto_filter(bot, query.message, k)
             else:
                 reqstr1 = query.from_user.id if query.from_user else 0
                 reqstr = await bot.get_users(reqstr1)
@@ -2745,13 +2748,13 @@ async def auto_fter(client, msg, spoll=False):
         else:
             return
     else:
-        message = msg.message.reply_to_message  # msg will be callback query
+        message = msg.reply_to_message  # msg will be callback query
         search, files, offset, total_results = spoll
         m=await message.reply_sticker("CAACAgUAAxkBAAEDePVmZFUmT4nHUw8SSZ6huzlgzRGs-QAC2w8AAr6xKFc_i74CwzHdxh4E",
         reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(f'Sᴇᴀʀᴄʜɪɴɢ Fᴏʀ {search} 🔎', callback_data="about")]]) 
         )
         settings = await get_settings(message.chat.id)
-        await msg.message.delete()
+        await msg.delete()
     pre = 'filep' if settings['file_secure'] else 'file'
     key = f"{message.chat.id}-{message.id}"
     FRESH[key] = search
