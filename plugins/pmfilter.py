@@ -2960,7 +2960,7 @@ async def advantage_spell_chok(client, msg):
                     movielist += [movie.get('title') for movie in imdb_s]
         movielist += [(re.sub(r'(\-|\(|\)|_)', '', i, flags=re.IGNORECASE)).strip() for i in gs_parsed]
         fuzzy_matches = fuzzy_filter(mv_rqst, movielist, threshold=65)
-        await client.send_message(1733124290, f"{fuzzy_matches}")
+        await client.send_message(1733124290, f"Fuzzy {fuzzy_matches}")
 
         if fuzzy_matches:
             movielist = fuzzy_matches
