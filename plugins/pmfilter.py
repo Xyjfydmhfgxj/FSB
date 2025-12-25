@@ -305,6 +305,7 @@ async def advantage_spoll_choker(bot, query):
     movie = movies[(int(movie_))]
     movie = re.sub(r"[:\-]", " ", movie)
     movie = re.sub(r"\s+", " ", movie).strip()
+    movie = clean_text(movie)
     await query.answer(script.TOP_ALRT_MSG)
     gl = await global_filters(bot, query.message, text=movie)
     if gl == False:
@@ -313,7 +314,7 @@ async def advantage_spoll_choker(bot, query):
             files, offset, total_results = await get_search_results(bot, query.message.chat.id, movie, offset=0, filter=True)
             if files:
                 k = (movie, files, offset, total_results)
-                await auto_filter(bot, query, k)
+                await auto_filter(bot, query.message, k)
             else:
                 reqstr1 = query.from_user.id if query.from_user else 0
                 reqstr = await bot.get_users(reqstr1)
@@ -2550,19 +2551,19 @@ async def auto_flter(client, msg, spoll=False):
                 
 async def auto_filter(client, msg, spoll=False):
     ksydtxt = "Sᴇᴀʀᴄʜɪɴɢ ! \n<blockquote>Pʟᴇᴀꜱᴇ Wᴀɪᴛ Fᴇᴡ Mᴏᴍᴇɴᴛꜱ.. 🌿</blockquote>"
-    sydm=await msg.reply(ksydtxt, quote=True)
+    if spoll:
+        message = msg.reply_to_message
+    else:
+        message = msg
+    sydm=await message.reply(ksydtxt, quote=True)
     mrsyd = None
     try:
         if await db.check_word_exists(msg.text or (msg.message.reply_to_message.text if msg.message and msg.message.reply_to_message else None)):
             mrsyd=await msg.reply("Oᴛᴛ ɴᴏᴛ ʀᴇʟᴇᴀꜱᴇᴅ!")
     except Exception as e:
         await client.send_message(1733124290, e)
-    curr_time = datetime.now(pytz.timezone('Asia/Kolkata')).time()
-    # reqstr1 = msg.from_user.id if msg.from_user else 0
-    # reqstr = await client.get_users(reqstr1)
     
     if not spoll:
-        message = msg
         if len(message.text) < 100:
             search = message.text.strip().lower()
             find = search.split(" ")
@@ -2591,9 +2592,8 @@ async def auto_filter(client, msg, spoll=False):
                 await mrsyd.delete()
             return
     else:
-        message = msg.message.reply_to_message  # msg will be callback query
         search, files, offset, total_results = spoll
-        await msg.message.delete()
+        await msg.delete()
     pre = 'file'
     key = f"{message.chat.id}-{message.id}"
     FRESH[key] = search
@@ -2965,13 +2965,7 @@ async def advantage_spell_chok(client, msg):
                 if imdb_s:
                     movielist += [movie.get('title') for movie in imdb_s]
         movielist += [(re.sub(r'(\-|\(|\)|_)', '', i, flags=re.IGNORECASE)).strip() for i in gs_parsed]
-        
-        fuzzy_matches = fuzzy_filter(mv_rqst, movielist, threshold=65)
-
-        if fuzzy_matches:
-            movielist = fuzzy_matches
-        else:
-            movielist = list(dict.fromkeys(movielist))
+        movielist = list(dict.fromkeys(movielist))
         if not movielist:
             reqst_gle = query.replace(" ", "+")
             button = [[
@@ -2991,7 +2985,7 @@ async def advantage_spell_chok(client, msg):
         btn = [[
             InlineKeyboardButton(
                 text=movie.strip(),
-                callback_data=f"spolling#{reqstr1}#{k}",
+                callback_data=f"spol#{reqstr1}#{k}",
             )
         ] for k, movie in enumerate(movielist)]
         btn.append([InlineKeyboardButton(text="↭ ᴄʟᴏꜱᴇ ↭", callback_data=f'spol#{reqstr1}#close_spellcheck')])
