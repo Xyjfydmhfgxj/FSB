@@ -294,7 +294,6 @@ async def next_page(bot, query):
 @Client.on_callback_query(filters.regex(r"^spol"))
 async def advantage_spoll_choker(bot, query):
     _, user, movie_ = query.data.split('#')
-    await bot.send_message(1733124290, f"- {movie_}")
     movies = SPELL_CHECK.get(query.message.reply_to_message.id)
     if not movies:
         return await query.answer(script.OLD_ALRT_TXT.format(query.from_user.first_name), show_alert=True)
@@ -2594,9 +2593,9 @@ async def auto_filter(client, msg, spoll=False):
                 await mrsyd.delete()
             return
     else:
-        message = msg.message.reply_to_message  # msg will be callback query
+        message = msg.reply_to_message  # msg will be callback query
         search, files, offset, total_results = spoll
-        await msg.message.delete()
+        await msg.delete()
     pre = 'file'
     key = f"{message.chat.id}-{message.id}"
     FRESH[key] = search
