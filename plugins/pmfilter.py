@@ -302,21 +302,16 @@ async def advantage_spoll_choker(bot, query):
     if movie_ == "close_spellcheck":
         return await query.message.delete()
     movie = movies[(int(movie_))]
-    await bot.send_message(1733124290, f"- {movie}")
     movie = re.sub(r"[:\-]", " ", movie)
     movie = re.sub(r"\s+", " ", movie).strip()
     movie = clean_text(movie)
-    await bot.send_message(1733124290, f"- {movie}")
     await query.answer(script.TOP_ALRT_MSG)
     gl = await global_filters(bot, query.message, text=movie)
     if gl == False:
-        await bot.send_message(1733124290, f"- 1{movie}")
         k = await manual_filters(bot, query.message, text=movie)
         if k == False:
-            await bot.send_message(1733124290, f"- 2 {movie}")
             files, offset, total_results = await get_search_results(bot, query.message.chat.id, movie, offset=0, filter=True)
             if files:
-                await bot.send_message(1733124290, f"- 3{movie}")
                 k = (movie, files, offset, total_results)
                 await auto_filter(bot, query.message, k)
             else:
