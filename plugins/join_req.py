@@ -396,15 +396,15 @@ async def fsub_callacks(client, cb):
         for ch in channels:
             text += f"`{ch}`\n"
 
-        return await cb.message.edit_text(text)
+        return await cb.message.reply_text(text)
 
     if data == "fsyd_clear":
         await db.clear_fsub()
         await db.del_all_join_req()
-        return await cb.message.edit_text("✅ Force-sub list cleared.")
+        return await cb.message.reply_text("✅ Force-sub list cleared.")
 
     if data == "fsyd_add":
-        await cb.message.edit_text(
+        await cb.message.reply_text(
             "➕ **Send channel ID or forward a channel message**\n\n"
             "Use /cancel to abort."
         )
@@ -412,7 +412,7 @@ async def fsub_callacks(client, cb):
         try:
             msg = await client.listen(cb.from_user.id, timeout=120)
         except:
-            return await cb.message.edit_text("⏳ Timeout.")
+            return await cb.message.reply_text("⏳ Timeout.")
 
         if msg.text and msg.text.lower() == "/cancel":
             return await cb.message.edit_text("❌ Cancelled.")
@@ -423,10 +423,10 @@ async def fsub_callacks(client, cb):
             try:
                 chat_id = int(msg.text.strip())
             except:
-                return await cb.message.edit_text("❌ Invalid channel ID.")
+                return await cb.message.reply_text("❌ Invalid channel ID.")
 
         await db.add_fsub_channel(chat_id)
-        return await cb.message.edit_text(f"✅ Added `{chat_id}` to force-sub list.")
+        return await cb.message.reply_text(f"✅ Added `{chat_id}` to force-sub list.")
     
     if data == "fsyd_remove_one":
         channels = await db.get_fsub_list()
@@ -439,7 +439,7 @@ async def fsub_callacks(client, cb):
         ]
         btn.append([InlineKeyboardButton("⬅ Back", callback_data="bot_fsub_back")])
 
-        return await cb.message.edit_text(
+        return await cb.message.reply_text(
             "🗑 **Select channel to remove**",
             reply_markup=InlineKeyboardMarkup(btn)
         )
