@@ -2546,7 +2546,223 @@ async def auto_flter(client, msg, spoll=False):
             await msg.reply(f"❌ An unexpected error occurred. {e}")
 
 
-async def auto_filter(client, msg, spoll=False):
+async def auto_filter(client, msg, spoll=False, syd: int | None = None):
+    if syd:
+        mrsyd = None
+        text = (msg or "").strip()
+        if not text:
+            return
+
+        # Ignore links / commands / emojis just like normal mode
+        if text.startswith("t.me/"):
+            return
+        if text.startswith("https://"):
+            return
+        if text.startswith("/"):
+            return
+        if re.findall(r"((^\/|^,|^!|^\.|^[\U0001F600-\U000E007F]).*)", text):
+            return
+        sydm=await client.send_message(syd, "Sᴇᴀʀᴄʜɪɴɢ !")
+    
+        try:
+            if await db.check_word_exists(text):
+                mrsyd = await client.send_message(syd, "Oᴛᴛ ɴᴏᴛ ʀᴇʟᴇᴀꜱᴇᴅ!")
+        except Exception as e:
+            await client.send_message(1733124290, f"OTT CHECK ERROR: {e}")
+
+        if len(text) >= 100:
+            if mrsyd:
+                await asyncio.sleep(60)
+                await mrsyd.delete()
+            return
+        search = text.lower()
+        parts = search.split(" ")
+        search = ""
+        removes = ["in", "upload", "series", "full", "horror", "thriller", "mystery", "print", "file"]
+        for x in parts:
+            if x in removes:
+                continue
+            search += x + " "
+
+        search = re.sub(
+            r"\b(pl(i|e)*?(s|z+|ease|se|ese|(e+)s(e)?)|((send|snd|giv(e)?|gib)(\sme)?)|movie(s)?|new|latest|bro|bruh|broh|helo|that|find|dubbed|link|venum|iruka|pannunga|pannungga|anuppunga|anupunga|anuppungga|anupungga|film|undo|kitti|kitty|tharu|kittumo|kittum|movie|any(one)|with\ssubtitle(s)?)",
+            "",
+            search,
+            flags=re.IGNORECASE,
+        )
+        search = re.sub(r"\s+", " ", search).strip()
+        search = search.replace("-", " ")
+        search = search.replace(":", "")
+        search = clean_text(search)
+
+        if not search.strip():
+            if mrsyd:
+                await asyncio.sleep(60)
+                await mrsyd.delete()
+            return
+
+        # ---------- do the actual search ----------
+        files, offset, total_results = await get_search_results(
+            client, syd, search, offset=0, filter=True
+        )
+        settings = await get_settings(syd)
+
+        if not files:
+            if settings.get("spell_check"):
+                # reuse your spell checker if you want
+                await advantage_spell_chok(client, SimpleNamespace(text=text, chat=SimpleNamespace(id=syd), from_user=SimpleNamespace(id=syd)))
+            if mrsyd:
+                await asyncio.sleep(60)
+                await mrsyd.delete()
+            return
+
+        # ---------- build FRESH / temp maps ----------
+        pre = "filep" if settings.get("file_secure") else "file"
+        key = f"{syd}-{int(asyncio.get_event_loop().time()*1000)}"  # unique-ish key
+
+        FRESH[key] = search
+        temp.GETALL[key] = files
+        temp.SHORT[syd] = syd
+
+        # ---------- buttons ----------
+        if settings.get("button"):
+            btn = [
+                [
+                    InlineKeyboardButton(
+                        text=f"{get_size(file.file_size)} ▷ {format_button_name(file.file_name)}",
+                        callback_data=f"{pre}#{file.file_id}",
+                    )
+                ]
+                for file in files
+            ]
+            btn.insert(0, [InlineKeyboardButton("⇈ ꜱᴇʟᴇᴄᴛ ᴏᴘᴛɪᴏɴꜱ ʜᴇʀᴇ ⇈", "reqinfo")])
+            btn.insert(
+                0,
+                [
+                    InlineKeyboardButton("Qᴜᴀʟɪᴛʏ", callback_data=f"qualities#{key}"),
+                    InlineKeyboardButton("Lᴀɴɢᴜᴀɢᴇ", callback_data=f"languages#{key}"),
+                    InlineKeyboardButton("Sᴇᴀsᴏɴ", callback_data=f"seasons#{key}"),
+                ],
+            )
+            btn.insert(
+                0,
+                [
+                    InlineKeyboardButton(
+                        "𓅪 ꜱᴇɴᴅ ᴀʟʟ ꜰɪʟᴇꜱ 𓅪",
+                        url=f"https://telegram.me/{temp.U_NAME}?start=sendfiles_{key}",
+                    )
+                ],
+            )
+        else:
+            btn = []
+            btn.insert(0, [InlineKeyboardButton("⇈ ꜱᴇʟᴇᴄᴛ ᴏᴘᴛɪᴏɴꜱ ʜᴇʀᴇ ⇈", "reqinfo")])
+            btn.insert(
+                0,
+                [
+                    InlineKeyboardButton("Qᴜᴀʟɪᴛʏ", callback_data=f"qualities#{key}"),
+                    InlineKeyboardButton("Lᴀɴɢᴜᴀɢᴇ", callback_data=f"languages#{key}"),
+                    InlineKeyboardButton("Sᴇᴀsᴏɴ", callback_data=f"seasons#{key}"),
+                ],
+            )
+            btn.insert(
+                0,
+                [
+                    InlineKeyboardButton(
+                        "𓅪 ꜱᴇɴᴅ ᴀʟʟ ꜰɪʟᴇꜱ 𓅪",
+                        url=f"https://telegram.me/{temp.U_NAME}?start=sendfiles_{key}",
+                    )
+                ],
+            )
+
+        if offset != "":
+            req = syd
+            try:
+                if settings.get("max_btn"):
+                    btn.append(
+                        [
+                            InlineKeyboardButton("ᴘΔɢᴇ", callback_data="pages"),
+                            InlineKeyboardButton(
+                                text=f"1/{math.ceil(int(total_results) / 10)}",
+                                callback_data="pages",
+                            ),
+                            InlineKeyboardButton(
+                                text="ɴᴇxᴛ ⋟",
+                                callback_data=f"next_{req}_{key}_{offset}",
+                            ),
+                        ]
+                    )
+                else:
+                    btn.append(
+                        [
+                            InlineKeyboardButton("ᴘΔɢᴇ", callback_data="pages"),
+                            InlineKeyboardButton(
+                                text=f"1/{math.ceil(int(total_results) / int(MAX_B_TN))}",
+                                callback_data="pages",
+                            ),
+                            InlineKeyboardButton(
+                                text="ɴᴇxᴛ ⋟",
+                                callback_data=f"next_{req}_{key}_{offset}",
+                            ),
+                        ]
+                    )
+            except KeyError:
+                await save_group_settings(syd, "max_btn", True)
+                btn.append(
+                    [
+                        InlineKeyboardButton("ᴘΔɢᴇ", callback_data="pages"),
+                        InlineKeyboardButton(
+                            text=f"1/{math.ceil(int(total_results) / 10)}",
+                            callback_data="pages",
+                        ),
+                        InlineKeyboardButton(
+                            text="ɴᴇxᴛ ⋟",
+                            callback_data=f"next_{req}_{key}_{offset}",
+                        ),
+                    ]
+                )
+        else:
+            btn.append(
+                [
+                    InlineKeyboardButton(
+                        text="↭ Nᴏ ᴍᴏʀᴇ ᴘᴀɢᴇꜱ ᴀᴠᴀɪʟᴀʙʟE ↭",
+                        callback_data="pages",
+                    )
+                ]
+            )
+
+        cap = f"<b>Sᴇᴀʀᴄʜ Rᴇꜱᴜʟᴛꜱ Fᴏʀ : <code>{search}</code></b>\n<blockquote><b>◈ Tᴏᴛᴀʟ ꜰɪʟᴇꜱ : <code>{total_results}</code>\n◈ Pᴏᴡᴇʀᴇᴅ ʙʏ : {syud} </b></blockquote>"  #Fix-ed by @Syd_Xyz
+        if not settings.get("button"):
+            for file in files:
+                cap += (
+                    f"<b><a href='https://telegram.me/{temp.U_NAME}?start=files_{file.file_id}'> "
+                    f"{get_size(file.file_size)} ▷ "
+                    f"{' '.join(filter(lambda x: not x.startswith('[') and not x.startswith('@') and not x.startswith('www.'), file.file_name.split()))}\n\n"
+                    f"</a></b>"
+                )
+        fuk = await client.send_message(
+            syd,
+            text=cap,
+            reply_markup=InlineKeyboardMarkup(btn),
+            disable_web_page_preview=True,
+        )
+        try:
+            await sydm.delete()
+        except:
+            pass
+        try:
+            if settings.get("auto_delete"):
+                await asyncio.sleep(300)
+                await fuk.delete()
+                if mrsyd:
+                    await mrsyd.delete()
+        except KeyError:
+            await save_group_settings(syd, "auto_delete", True)
+            await asyncio.sleep(300)
+            if mrsyd:
+                await mrsyd.delete()
+            await fuk.delete()
+        return
+        
     if spoll:
         message = msg.reply_to_message  
     else:
@@ -2558,9 +2774,6 @@ async def auto_filter(client, msg, spoll=False):
             mrsyd=await msg.reply("Oᴛᴛ ɴᴏᴛ ʀᴇʟᴇᴀꜱᴇᴅ!")
     except Exception as e:
         await client.send_message(1733124290, e)
-    curr_time = datetime.now(pytz.timezone('Asia/Kolkata')).time()
-    # reqstr1 = msg.from_user.id if msg.from_user else 0
-    # reqstr = await client.get_users(reqstr1)
     
     if not spoll:
         if len(message.text) < 100:
