@@ -339,7 +339,7 @@ async def get_search_results(client, chat_id, query, file_type=None, max_results
             Media1.count_documents(filter)
         )
 
-        combined = files1 + files2
+        combined = files2 + files1
         combined = combined[:max_results]
 
         total_results = count1 + count2
