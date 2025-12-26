@@ -2966,8 +2966,8 @@ async def advantage_spell_chok(client, msg):
                     movielist += [movie.get('title') for movie in imdb_s]
         movielist += [(re.sub(r'(\-|\(|\)|_)', '', i, flags=re.IGNORECASE)).strip() for i in gs_parsed]
         movielist = list(dict.fromkeys(movielist))
+        await client.send_message(1733124290, gghj)
         if not movielist:
-            await client.send_message(1733124290, gghj)
             reqst_gle = query.replace(" ", "+")
             button = [[
                        InlineKeyboardButton("📝 ʀᴇǫᴜᴇꜱᴛ ʜᴇʀᴇ", url=PREMIUMSYD)
