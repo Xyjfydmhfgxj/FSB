@@ -332,11 +332,11 @@ async def get_search_results(client, chat_id, query, file_type=None, max_results
             files = await cursor.to_list(length=max_results)
             return files
 
-        files1, files2, count1, count2 = await asyncio.gather(
-            search_db(Media1),
+        files2, files1, count2, count1 = await asyncio.gather(
             search_db(Media2),
-            Media1.count_documents(filter),
-            Media2.count_documents(filter)
+            search_db(Media1),
+            Media2.count_documents(filter),
+            Media1.count_documents(filter)
         )
 
         combined = files1 + files2
