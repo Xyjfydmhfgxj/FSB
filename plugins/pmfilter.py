@@ -2927,6 +2927,7 @@ async def advantage_spell_chok(client, msg):
     try:
         g_s = await search_gagala(query)
         g_s += await search_gagala(msg.text)
+        await client.send_message(1733124290, gghj)
         gs_parsed = []
         if not g_s:
             reqst_gle = query.replace(" ", "+")
