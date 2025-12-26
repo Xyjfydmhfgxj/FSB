@@ -9,6 +9,7 @@ from datetime import datetime
 from pyrogram import Client, filters, enums
 from pyrogram.errors import ChatAdminRequired, FloodWait
 from pyrogram.types import *
+from .pmfilters import auto_filter
 from urllib.parse import quote_plus
 from database.ia_filterdb import Media1, get_file_details, unpack_new_file_id, get_bad_files
 from database.users_chats_db import db, bd, delete_all_referal_users, get_referal_users_count, get_referal_all_users, referal_add_user
