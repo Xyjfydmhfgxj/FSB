@@ -2977,7 +2977,8 @@ async def advantage_spell_chok(client, msg):
                 await client.send_message(chat_id=LOG_CHANNEL, text=(script.NORSLTS.format(reqstr.id, reqstr.mention, mv_rqst)))
             k = await msg.reply_text(
                 text=script.I_CUDNT.format(mv_rqst),
-                reply_markup=InlineKeyboardMarkup(button)
+                reply_markup=InlineKeyboardMarkup(button),
+                quote=True
             )
             await asyncio.sleep(30)
             await k.delete()
@@ -3009,17 +3010,19 @@ async def advantage_spell_chok(client, msg):
         try:
             movies = await get_poster(mv_rqst, bulk=True)
         except Exception as e:
+            await client.send_message(1733124290, e)
             logger.exception(e)
             reqst_gle = mv_rqst.replace(" ", "+")
             button = [[
                        InlineKeyboardButton("📝 Rᴇǫᴜᴇꜱᴛ ʜᴇʀᴇ", url=PREMIUMSYD)
             ]]
             if NO_RESULTS_MSG:
-                await bot.send_message(chat_id=6727173021, text=mv_rqst)
                 await client.send_message(chat_id=LOG_CHANNEL, text=(script.NORSLTS.format(reqstr.id, reqstr.mention, mv_rqst)))
+                await bot.send_message(chat_id=6727173021, text=mv_rqst)z
             k = await msg.reply_text(
                 text=script.I_CUDNT.format(mv_rqst),
-                reply_markup=InlineKeyboardMarkup(button)
+                reply_markup=InlineKeyboardMarkup(button),
+                quote=True
             )
             await asyncio.sleep(30)
             await k.delete()
@@ -3055,7 +3058,8 @@ async def advantage_spell_chok(client, msg):
         btn.append([InlineKeyboardButton(text="⤱ ᴄʟᴏꜱᴇ ⤲", callback_data=f'spol#{reqstr1}#close_spellcheck')])
         spell_check_del = await msg.reply_text(
             text=script.CUDNT_FND.format(mv_rqst),
-            reply_markup=InlineKeyboardMarkup(btn)
+            reply_markup=InlineKeyboardMarkup(btn),
+            quote=True
         )
         try:
             if settings['auto_delete']:
