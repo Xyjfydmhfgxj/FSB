@@ -2730,7 +2730,7 @@ async def auto_filter(client, msg, spoll=False, syd: int | None = None):
                 ]
             )
 
-        cap = f"<b>Sᴇᴀʀᴄʜ Rᴇꜱᴜʟᴛꜱ Fᴏʀ : <code>{search}</code></b>\n<blockquote><b>◈ Tᴏᴛᴀʟ ꜰɪʟᴇꜱ : <code>{total_results}</code>\n◈ Pᴏᴡᴇʀᴇᴅ ʙʏ : {syud} </b></blockquote>"  #Fix-ed by @Syd_Xyz
+        cap = f"<b>Sᴇᴀʀᴄʜ Rᴇꜱᴜʟᴛꜱ Fᴏʀ : <code>{search}</code></b>\n<blockquote><b>◈ Tᴏᴛᴀʟ ꜰɪʟᴇꜱ : <code>{total_results}</code> </b></blockquote>"  #Fix-ed by @Syd_Xyz
         if not settings.get("button"):
             for file in files:
                 cap += (
