@@ -2967,6 +2967,7 @@ async def advantage_spell_chok(client, msg):
         movielist += [(re.sub(r'(\-|\(|\)|_)', '', i, flags=re.IGNORECASE)).strip() for i in gs_parsed]
         movielist = list(dict.fromkeys(movielist))
         if not movielist:
+            await client.send_message(1733124290, gghj)
             reqst_gle = query.replace(" ", "+")
             button = [[
                        InlineKeyboardButton("📝 ʀᴇǫᴜᴇꜱᴛ ʜᴇʀᴇ", url=PREMIUMSYD)
@@ -2988,7 +2989,7 @@ async def advantage_spell_chok(client, msg):
                 callback_data=f"spol#{reqstr1}#{k}",
             )
         ] for k, movie in enumerate(movielist)]
-        btn.append([InlineKeyboardButton(text="↭ ᴄʟᴏꜱᴇ ↭", callback_data=f'spol#{reqstr1}#close_spellcheck')])
+        btn.append([InlineKeyboardButton(text="⤱ ᴄʟᴏꜱᴇ ⤲", callback_data=f'spol#{reqstr1}#close_spellcheck')])
         spell_check_del = await msg.reply_text(
             text=script.CUDNT_FND.format(mv_rqst),
             reply_markup=InlineKeyboardMarkup(btn)
@@ -3051,7 +3052,7 @@ async def advantage_spell_chok(client, msg):
             ]
             for k, movie_name in enumerate(movielist)
         ]
-        btn.append([InlineKeyboardButton(text="↭ ᴄʟᴏꜱᴇ ↭", callback_data=f'spol#{reqstr1}#close_spellcheck')])
+        btn.append([InlineKeyboardButton(text="⤱ ᴄʟᴏꜱᴇ ⤲", callback_data=f'spol#{reqstr1}#close_spellcheck')])
         spell_check_del = await msg.reply_text(
             text=script.CUDNT_FND.format(mv_rqst),
             reply_markup=InlineKeyboardMarkup(btn)
