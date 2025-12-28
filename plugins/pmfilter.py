@@ -1950,6 +1950,28 @@ async def cb_handler(client: Client, query: CallbackQuery):
             parse_mode=enums.ParseMode.HTML
         )
 
+    elif query.data == "addfil":
+        buttons = [[
+            InlineKeyboardButton('⇋ ʙΔᴄᴋ ⇋', callback_data='help')
+        ]]
+        reply_markup = InlineKeyboardMarkup(buttons)
+        await client.edit_message_media(
+            query.message.chat.id, 
+            query.message.id, 
+            InputMediaPhoto(random.choice(PICS))
+        )
+        tsydt = """Nᴏᴡ Yᴏᴜ Cᴀɴ Aᴅᴅ Yᴏᴜʀ Oᴡɴ Fɪʟᴇꜱ Iɴ Oᴜʀ Bᴏᴛ Uꜱɪɴɢ @File_x_store_bot
+        
+        ᴍᴇᴛʜᴏᴅꜱ ᴛᴏ ᴀᴅᴅ ꜰɪʟᴇ 🌱:
+           • ᴊᴜꜱᴛ ꜱᴇɴᴅ ᴛʜᴀᴛ ꜰɪʟᴇ ᴛᴏ <a href="https://t.me/File_x_store_bot">ꜰɪʟᴇ ɪɴꜱᴇʀᴛᴇʀ ʙᴏᴛ</a>
+           • ᴀᴅᴅ ʙᴏᴛ ɪɴ ɢʀᴏᴜᴩ/ᴄʜᴀɴɴᴇʟ ᴀɴᴅ ꜱᴇɴᴅ ɪɴ ɪᴛ
+           • ᴜꜱᴇ /save ɪɴ ɢʀᴏᴜᴩ/ᴄʜᴀɴɴᴇʟ ᴛᴏ ᴀᴅᴅ ᴇxɪꜱᴛɪɴɢ ꜰɪʟᴇꜱ ɪɴ ɪᴛ."""
+        await query.message.edit_text(
+            text=tsydt,
+            reply_markup=reply_markup,
+            parse_mode=enums.ParseMode.HTML
+    )
+
     elif query.data == "group":
         buttons = [[
             InlineKeyboardButton('⇋ ʙΔᴄᴋ ⇋', callback_data='help')
