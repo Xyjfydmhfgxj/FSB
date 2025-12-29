@@ -2560,7 +2560,7 @@ async def auto_flter(client, msg, spoll=False):
 
                 
 async def auto_filter(client, msg, spoll=False):
-    ksydtxt = "Sᴇᴀʀᴄʜɪɴɢ ! \n<blockquote>Pʟᴇᴀꜱᴇ Wᴀɪᴛ Fᴇᴡ Mᴏᴍᴇɴᴛꜱ.. 🌿</blockquote>"
+    ksydtxt = "Sᴇᴀʀᴄʜɪɴɢ 🌙"
     if spoll:
         message = msg.reply_to_message
     else:
