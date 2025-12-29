@@ -139,13 +139,11 @@ async def start(client, message):
         buttons = [[
                     InlineKeyboardButton('☒ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴩ ☒', url=f'http://telegram.me/{temp.U_NAME}?startgroup=true')
                 ],[
-                    InlineKeyboardButton('⌬ ᴇᴀʀɴ ᴍᴏꫝᴇʏ ⌬', callback_data="shortlink_info"),
-                    InlineKeyboardButton('⚝ ᴜᴘᦔᴀᴛꫀ𝘴 ⚝', callback_data='channels')
-                ],[
                     InlineKeyboardButton('⇱  ᴄᴏᴍᴍᴀɴᴅꜱ  ⇲', callback_data='help'),
                     InlineKeyboardButton('⊛ ᴀʙᴏᴜᴛ ⊛', callback_data='about')
                 ],[
-                    InlineKeyboardButton("⊛ ᴊᴏɪɴ ᴜᴘᴅᴀᴛᴇꜱ ᴄʜᴀɴɴᴇʟ ⊛", url="https://t.me/Bot_Cracker")
+                    InlineKeyboardButton('⚝ ᴜᴘᦔᴀᴛꫀꜱ ⚝', callback_data='channels'),
+                    InlineKeyboardButton('⚹ ᴊᴏɪɴ ⚹', url='https://t.me/bot_cracker_X/20')
                   ]]
         reply_markup = InlineKeyboardMarkup(buttons)
         await m.delete()
@@ -163,13 +161,11 @@ async def start(client, message):
         buttons = [[
                     InlineKeyboardButton('☒ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴩ ☒', url=f'http://telegram.me/{temp.U_NAME}?startgroup=true')
                 ],[
-                    InlineKeyboardButton('⌬ ᴇᴀʀɴ ᴍᴏꫝᴇʏ ⌬', callback_data="shortlink_info"),
-                    InlineKeyboardButton('⚝ ᴜᴘᦔᴀᴛꫀ𝘴 ⚝', callback_data='channels')
-                ],[
                     InlineKeyboardButton('⇱  ᴄᴏᴍᴍᴀɴᴅꜱ  ⇲', callback_data='help'),
                     InlineKeyboardButton('⊛ ᴀʙᴏᴜᴛ ⊛', callback_data='about')
                 ],[
-                    InlineKeyboardButton("⊛ ᴊᴏɪɴ ᴜᴘᴅᴀᴛᴇꜱ ᴄʜᴀɴɴᴇʟ ⊛", url="https://t.me/Bot_Cracker")
+                    InlineKeyboardButton('⚝ ᴜᴘᦔᴀᴛꫀꜱ ⚝', callback_data='channels'),
+                    InlineKeyboardButton('⚹ ᴊᴏɪɴ ⚹', url='https://t.me/bot_cracker_X/20')
                   ]]
         reply_markup = InlineKeyboardMarkup(buttons)
         
