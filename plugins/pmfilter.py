@@ -286,9 +286,11 @@ async def next_page(bot, query):
             pass
     else:
         try:
-            await query.edit_message_reply_markup(
-                reply_markup=InlineKeyboardMarkup(btn)
-            )
+            cap = f"<b>Sᴇᴀʀᴄʜ Rᴇꜱᴜʟᴛꜱ Fᴏʀ : <code>{search}</code></b>\n<blockquote><b>◈ Tᴏᴛᴀʟ ꜰɪʟᴇꜱ : <code>{total_results}</code> </b></blockquote>"  #Fix-ed by @Syd_Xyz
+            if total:
+                await query.message.edit_text(text=cap, reply_markup=InlineKeyboardMarkup(btn), disable_web_page_preview=True)
+            else:
+                await query.edit_message_reply_markup(reply_markup=InlineKeyboardMarkup(btn))
         except MessageNotModified:
             pass
     await query.answer()
