@@ -323,8 +323,12 @@ async def get_search_results(client, chat_id, query, file_type=None, max_results
             )
 
             combined = (files2 + files1)[:max_results]
-            next_offset = max_results if len(combined) == max_results else ""
-            total_results = None
+            if len(combined) < max_results:
+                total_results = len(combined)
+                next_offset = ""
+            else:
+                total_results = None
+                next_offset = max_results
             return combined, next_offset, total_results
 
 
