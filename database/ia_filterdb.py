@@ -192,19 +192,23 @@ LANG_MAP = {
 
 
 def expand_language_variants(query: str) -> list[str]:
-    """Expand query for language keywords and their equivalents."""
-    variants = [query]
-    query_lower = query.lower()
+    variants = {query}
+    ql = query.lower()
+
     for lang, equivalents in LANG_MAP.items():
-        if lang in query_lower:
+        lang_pat = rf"\b{re.escape(lang)}\b"
+        if re.search(lang_pat, ql):
             for eq in equivalents:
-                if eq not in query_lower:
-                    variants.append(query_lower.replace(lang, eq))
-        elif any(eq in query_lower for eq in equivalents):
-            for eq in equivalents:
-                if eq in query_lower and lang not in query_lower:
-                    variants.append(query_lower.replace(eq, lang))
-    return variants
+                eq_pat = rf"\b{re.escape(eq)}\b"
+                if not re.search(eq_pat, ql):
+                    variants.add(re.sub(lang_pat, eq, ql))
+        for eq in equivalents:
+            eq_pat = rf"\b{re.escape(eq)}\b"
+            if re.search(eq_pat, ql) and not re.search(lang_pat, ql):
+                variants.add(re.sub(eq_pat, lang, ql))
+
+    return list(variants)
+
 
 
 
@@ -266,7 +270,7 @@ async def get_search_results(client, chat_id, query, file_type=None, max_results
         expanded_variants = []
         for q in search_variants:
             expanded_variants.extend(expand_language_variants(q))
-        search_variants = list(set(expanded_variants))  # remove duplicates
+        search_variants = list(dict.fromkeys(expanded_variants))  # remove duplicates
 
         regex_list = []
         for q in search_variants:
@@ -318,7 +322,7 @@ async def get_search_results(client, chat_id, query, file_type=None, max_results
         next_offset = offset + max_results if len(results) == max_results else ""
         total_results = None
 
-        if offset > 0:
+        if offset == 10:
             c1, c2 = await asyncio.gather(
                 Media1.count_documents(filter),
                 Media2.count_documents(filter)
