@@ -98,11 +98,8 @@ async def get_authchannel(bot, query):
 
     # Helper: return False + first/second auth channel when no DB channels exist
     def no_db_response():
-        if len(auth_list) < 2:
-            ch1 = auth_list[0] if auth_list else None
-            return False, ch1, None
-
-        ch1, ch2 = random.sample(auth_list, 2)
+        ch1 = auth_list[0] if len(auth_list) >= 1 else None
+        ch2 = auth_list[1] if len(auth_list) >= 2 else None
         return False, ch1, ch2
 
 
