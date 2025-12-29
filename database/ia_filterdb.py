@@ -211,12 +211,12 @@ def expand_language_variants(query: str) -> list[str]:
 
 async def get_search_results(client, chat_id, query, file_type=None, max_results=10, offset=0, filter=False):
     try:
-        # ---------- SETTINGS ----------
+        # -------- SETTINGS --------
         if chat_id is not None:
             s = await get_settings(int(chat_id))
             max_results = 10 if s.get("max_btn") else int(MAX_B_TN)
 
-        # ---------- REGEX LOGIC (UNCHANGED) ----------
+        # -------- REGEX LOGIC (UNCHANGED) --------
         query = query.strip()
         search_variants = expand_numbers(query)
 
@@ -226,9 +226,7 @@ async def get_search_results(client, chat_id, query, file_type=None, max_results
 
         if compact_match:
             sn, ep = map(int, compact_match.groups())
-            search_variants += [
-                f"S{sn:02d}E{ep:02d}", f"S{sn}E{ep}", f"Season {sn} Episode {ep}"
-            ]
+            search_variants += [f"S{sn:02d}E{ep:02d}", f"S{sn}E{ep}", f"Season {sn} Episode {ep}"]
 
         if season_match and episode_match:
             sn = int(season_match.group(1) or season_match.group(2))
@@ -242,10 +240,8 @@ async def get_search_results(client, chat_id, query, file_type=None, max_results
 
         if season_match:
             sn = int(season_match.group(1) or season_match.group(2))
-            search_variants += [
-                re.sub(season_match.re, f"S{sn:02d}", query),
-                re.sub(season_match.re, f"Season {sn}", query)
-            ]
+            search_variants += [re.sub(season_match.re, f"S{sn:02d}", query),
+                                re.sub(season_match.re, f"Season {sn}", query)]
 
         if episode_match:
             ep = int(episode_match.group(1) or episode_match.group(2))
@@ -253,7 +249,7 @@ async def get_search_results(client, chat_id, query, file_type=None, max_results
                 re.sub(episode_match.re, f"E{ep:02d}", query),
                 re.sub(episode_match.re, f"EP {ep:02d}", query),
                 re.sub(episode_match.re, f"EP{ep}", query),
-                re.sub(episode_match.re, f"Episode {ep}", query),
+                re.sub(episode_match.re, f"Episode {ep}", query)
             ]
             for s in range(1, 9):
                 search_variants += [
@@ -277,7 +273,7 @@ async def get_search_results(client, chat_id, query, file_type=None, max_results
                 raw = re.escape(q).replace(r"\ ", r".*[\s\.\+\-_]")
             regex_list.append(re.compile(raw, re.I))
 
-        # ---------- FILTER ----------
+        # -------- FILTER --------
         filter = {"file_name": {"$in": regex_list}}
         if file_type:
             filter["file_type"] = file_type
@@ -285,19 +281,36 @@ async def get_search_results(client, chat_id, query, file_type=None, max_results
         async def fetch(model, skip, limit):
             return await model.find(filter).sort("$natural", -1).skip(skip).limit(limit).to_list(limit)
 
-        # ---------- PAGINATION (DB2 → DB1) ----------
-        db2_count = await Media2.count_documents(filter)
+        # -------- COUNT (except first page) --------
+        db2_count = None
+        if offset > 0:
+            db2_count = await Media2.count_documents(filter)
+
         results = []
 
-        if offset < db2_count:
-            results = await fetch(Media2, offset, max_results)
+        # -------- FETCH LOGIC --------
+        if db2_count is None or offset < db2_count:
+            skip2 = offset if db2_count is None else offset
+            results = await fetch(Media2, skip2, max_results)
+
             if len(results) < max_results:
-                results += await fetch(Media1, 0, max_results - len(results))
+                used = len(results)
+                results += await fetch(Media1, 0, max_results - used)
         else:
             results = await fetch(Media1, offset - db2_count, max_results)
 
+        # -------- NEXT & TOTAL --------
         next_offset = offset + max_results if len(results) == max_results else ""
-        total_results = len(results) if offset == 0 and len(results) < max_results else None
+        total_results = None
+
+        if offset > 0:
+            c1, c2 = await asyncio.gather(
+                Media1.count_documents(filter),
+                Media2.count_documents(filter)
+            )
+            total_results = c1 + c2
+        elif offset == 0 and len(results) < max_results:
+            total_results = len(results)
 
         return results, next_offset, total_results
 
@@ -307,6 +320,7 @@ async def get_search_results(client, chat_id, query, file_type=None, max_results
             f"❌ Error in get_search_results\nChat: `{chat_id}`\nQuery: `{query}`\nError: `{e}`"
         )
         return [], "", 0
+
 
 
 async def get_sch_results(client, chat_id, query, file_type=None, max_results=10, offset=0, filter=False):
