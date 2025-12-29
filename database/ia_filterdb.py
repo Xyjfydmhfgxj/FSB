@@ -207,7 +207,145 @@ def expand_language_variants(query: str) -> list[str]:
     return variants
 
 
+
+
 async def get_search_results(client, chat_id, query, file_type=None, max_results=10, offset=0, filter=False):
+    """Return (results, next_offset, total_results) using sequential DB search"""
+
+    try:
+        # ===============================
+        # EXISTING SETTINGS LOGIC (UNCHANGED)
+        # ===============================
+        if chat_id is not None:
+            settings = await get_settings(int(chat_id))
+            try:
+                max_results = 10 if settings['max_btn'] else int(MAX_B_TN)
+            except KeyError:
+                await save_group_settings(int(chat_id), 'max_btn', False)
+                settings = await get_settings(int(chat_id))
+                max_results = 10 if settings['max_btn'] else int(MAX_B_TN)
+
+        # ===============================
+        # REGEX BUILDING (UNCHANGED)
+        # ===============================
+        query = query.strip()
+        search_variants = expand_numbers(query)
+
+        season_match = re.search(r"\b(?:season\s*(\d{1,2})|s0*(\d{1,2}))\b", query, re.IGNORECASE)
+        episode_match = re.search(r"\b(?:episode\s*(\d{1,3})|e[p]?0*(\d{1,3}))\b", query, re.IGNORECASE)
+        compact_match = re.search(r"\bS0*(\d{1,2})[\s._-]*E[P]?0*(\d{1,3})\b", query, re.IGNORECASE)
+
+        if compact_match:
+            sn, ep = int(compact_match.group(1)), int(compact_match.group(2))
+            search_variants += [
+                f"S{sn:02d}E{ep:02d}",
+                f"S{sn}E{ep}",
+                f"Season {sn} Episode {ep}"
+            ]
+
+        if season_match and episode_match:
+            sn = int(season_match.group(1) or season_match.group(2))
+            ep = int(episode_match.group(1) or episode_match.group(2))
+            start, end = min(season_match.start(), episode_match.start()), max(season_match.end(), episode_match.end())
+            search_variants += [
+                query[:start] + f"S{sn:02d}E{ep:02d}" + query[end:],
+                query[:start] + f"S{sn}E{ep}" + query[end:],
+                query[:start] + f"Season {sn} Episode {ep}" + query[end:]
+            ]
+
+        if season_match:
+            sn = int(season_match.group(1) or season_match.group(2))
+            search_variants += [
+                re.sub(season_match.re, f"S{sn:02d}", query),
+                re.sub(season_match.re, f"Season {sn}", query)
+            ]
+
+        if episode_match:
+            ep = int(episode_match.group(1) or episode_match.group(2))
+            search_variants += [
+                re.sub(episode_match.re, f"E{ep:02d}", query),
+                re.sub(episode_match.re, f"EP {ep:02d}", query),
+                re.sub(episode_match.re, f"EP{ep}", query),
+                re.sub(episode_match.re, f"Episode {ep}", query)
+            ]
+            for syd in range(1, 9):
+                search_variants += [
+                    re.sub(episode_match.re, f"S{syd:02d}E{ep:02d}", query),
+                    re.sub(episode_match.re, f"S{syd}E{ep}", query)
+                ]
+
+        search_variants.append(re.sub("&", "and", query))
+
+        expanded = []
+        for q in search_variants:
+            expanded.extend(expand_language_variants(q))
+        search_variants = list(set(expanded))
+
+        regex_list = []
+        for q in search_variants:
+            if not q:
+                raw = "."
+            elif " " not in q:
+                raw = rf"(\b|[\.\+\-_]){re.escape(q)}(\b|[\.\+\-_])"
+            else:
+                raw = re.escape(q).replace(r"\ ", r".*[\s\.\+\-_]")
+            regex_list.append(re.compile(raw, re.IGNORECASE))
+
+        # ===============================
+        # FILTER (UNCHANGED)
+        # ===============================
+        filter = {"file_name": {"$in": regex_list}}
+        if file_type:
+            filter["file_type"] = file_type
+
+        # ===============================
+        # NEW SEQUENTIAL DB SEARCH LOGIC
+        # ===============================
+
+        # Decide DB from offset
+        if offset >= 0:
+            model = Media2          # newer DB
+            real_offset = offset
+            next_db_offset = -0     # marker to jump to DB1
+        else:
+            model = Media1          # older DB
+            real_offset = abs(offset)
+            next_db_offset = None
+
+        cursor = model.find(filter)
+        cursor.sort("$natural", -1).skip(real_offset).limit(max_results)
+        files = await cursor.to_list(length=max_results)
+
+        # If page full → stay in same DB
+        if len(files) == max_results:
+            next_offset = real_offset + max_results
+            if offset < 0:
+                next_offset = -next_offset
+            return files, next_offset, None
+
+        # Page not full → DB exhausted
+        if offset >= 0:
+            # switch to DB1
+            cursor = Media1.find(filter)
+            cursor.sort("$natural", -1).limit(max_results - len(files))
+            more = await cursor.to_list(length=max_results - len(files))
+            files += more
+
+            if len(files) == max_results:
+                return files, -(len(more)), None
+
+        # No more data
+        total_results = len(files)
+        return files, "", total_results
+
+    except Exception as e:
+        await client.send_message(
+            ADMIN_ID,
+            f"❌ Error in get_search_results\nChat: `{chat_id}`\nQuery: `{query}`\nError: `{e}`"
+        )
+        return [], "", 0
+
+async def get_sch_results(client, chat_id, query, file_type=None, max_results=10, offset=0, filter=False):
     """For given query return (results, next_offset, total_results)"""
     try:
         if chat_id is not None:
