@@ -1615,7 +1615,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
             InputMediaPhoto(random.choice(PICS))
         )
         await query.message.edit_text(
-            text=script.START_TXT.format(query.from_user.mention, gtxt, temp.U_NAME, temp.B_NAME),
+            text=script.START_TXT.format(query.from_user.mention, temp.U_NAME, temp.B_NAME),
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
         )
@@ -2212,10 +2212,15 @@ async def cb_handler(client: Client, query: CallbackQuery):
         ]]
         reply_markup = InlineKeyboardMarkup(buttons)
         total = await Media.count_documents()
+        total2 = await Media2.count_documents()
         users = await db.total_users_count()
         chats = await db.total_chat_count()
         monsize = await db.get_db_size()
+        monsize2 = await bd.get_db_size()
         free = 536870912 - monsize
+        free2 = 536870912 - monsize2
+        monsize2 = get_size(monsize2)
+        free2 = get_size(free2)
         monsize = get_size(monsize)
         free = get_size(free)
         await client.edit_message_media(
@@ -2224,7 +2229,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
             InputMediaPhoto(random.choice(PICS))
         )
         await query.message.edit_text(
-            text=script.STATUS_TXT.format(total, users, chats, monsize, free),
+            text=script.STATUS_TXT.format(total, total2, users, chats, monsize, free, monsize2, free2),
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
         )
