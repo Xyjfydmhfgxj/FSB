@@ -1590,26 +1590,24 @@ async def cb_handler(client: Client, query: CallbackQuery):
         buttons = []
         if await db.has_premium_access(user_id):                               
             buttons = [[
-                    InlineKeyboardButton('☒ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴩ ☒', url=f'http://telegram.me/{temp.U_NAME}?startgroup=true')
+                    InlineKeyboardButton('☒ Δᴅᴅ Mᴇ Tᴏ Yᴏᴜʀ Gʀᴏᴜᴩ ☒', url=f'http://telegram.me/{temp.U_NAME}?startgroup=true')
                 ],[
-                    InlineKeyboardButton('⌬ ᴇᴀʀɴ ᴍᴏꫝᴇʏ ⌬', callback_data="shortlink_info"),
-                    InlineKeyboardButton('⚝ ᴜᴘᦔᴀᴛꫀ𝘴 ⚝', callback_data='channels')
+                    InlineKeyboardButton('⊜ ᴄ0ᴍᴍᴀɴᴅꜱ ⊜', callback_data='help'),
+                    InlineKeyboardButton('⊛ Δʙᴏᴜᴛ ⊛', callback_data='about')
                 ],[
-                    InlineKeyboardButton('⇱  ᴄᴏᴍᴍᴀɴᴅꜱ  ⇲', callback_data='help'),
-                    InlineKeyboardButton('⊛ ᴀʙᴏᴜᴛ ⊛', callback_data='about')
-                  ]]
+                    InlineKeyboardButton('⚝ ᴜᴘᦔᴀᴛꫀꜱ ⚝', callback_data='channels'),
+                    InlineKeyboardButton('⚹ ᴊᴏɪɴ ⚹', url='https://t.me/Bot_Cracker_X/20')
+                 ]]
         else:
             buttons = [[
-                    InlineKeyboardButton('☒ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴩ ☒', url=f'http://telegram.me/{temp.U_NAME}?startgroup=true')
+                    InlineKeyboardButton('☒ Δᴅᴅ Mᴇ Tᴏ Yᴏᴜʀ Gʀᴏᴜᴩ ☒', url=f'http://telegram.me/{temp.U_NAME}?startgroup=true')
                 ],[
-                    InlineKeyboardButton('⌬ ᴇᴀʀɴ ᴍᴏꫝᴇʏ ⌬', callback_data="shortlink_info"),
-                    InlineKeyboardButton('⚝ ᴜᴘᦔᴀᴛꫀ𝘴 ⚝', callback_data='channels')
+                    InlineKeyboardButton('⊜ ᴄ0ᴍᴍᴀɴᴅꜱ ⊜', callback_data='help'),
+                    InlineKeyboardButton('⊛ Δʙᴏᴜᴛ ⊛', callback_data='about')
                 ],[
-                    InlineKeyboardButton('⇱  ᴄᴏᴍᴍᴀɴᴅꜱ  ⇲', callback_data='help'),
-                    InlineKeyboardButton('⊛ ᴀʙᴏᴜᴛ ⊛', callback_data='about')
-                ],[
-                    InlineKeyboardButton("⊛ ᴊᴏɪɴ ᴜᴘᴅᴀᴛᴇꜱ ᴄʜᴀɴɴᴇʟ ⊛", url="https://t.me/Bot_Cracker")
-                  ]]
+                    InlineKeyboardButton('⚝ ᴜᴘᦔᴀᴛꫀꜱ ⚝', callback_data='channels'),
+                    InlineKeyboardButton('⚹ ᴊᴏɪɴ ⚹', url='https://t.me/Bot_Cracker_X/20')
+                 ]]
         
         reply_markup = InlineKeyboardMarkup(buttons)
         await client.edit_message_media(
