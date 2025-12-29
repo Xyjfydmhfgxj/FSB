@@ -221,7 +221,7 @@ async def next_page(bot, query):
                     [InlineKeyboardButton("⋞ ʙΔᴄᴋ", callback_data=f"next_{req}_{key}_{off_set}"), InlineKeyboardButton(f"{math.ceil(int(offset)/10)+1} / {math.ceil(total/10)}", callback_data="pages")]
                 )
             elif off_set is None:
-                btn.append([InlineKeyboardButton("ᴘᴀGᴇ", callback_data="pages"), InlineKeyboardButton(f"{math.ceil(int(offset)/10)+1} / {math.ceil(total/10)}", callback_data="pages"), InlineKeyboardButton("ɴᴇxᴛ ⋟", callback_data=f"next_{req}_{key}_{n_offset}")])
+                btn.append([InlineKeyboardButton("Pᴀɢᴇ {math.ceil(int(offset)/10)+1} / {math.ceil(total/10)}", callback_data="pages"), InlineKeyboardButton("ɴᴇxᴛ ⋟", callback_data=f"next_{req}_{key}_{n_offset}")])
             else:
                 btn.append(
                     [
@@ -2889,8 +2889,12 @@ async def auto_filter(client, msg, spoll=False, syd: int | None = None):
 
     if offset != "":
         req = message.from_user.id if message.from_user else 0
+        if total_results:
+            pagsyd = "Pᴀɢᴇ 1/{math.ceil(int(total_results)/int(MAX_B_TN))}"
+        else:
+            pagsyd = "Pᴀɢᴇ 1"
         btn.append(
-            [InlineKeyboardButton("ᴘΔɢᴇ", callback_data="pages"), InlineKeyboardButton(text=f"1/{math.ceil(int(total_results)/int(MAX_B_TN))}",callback_data="pages"), InlineKeyboardButton(text="ɴᴇxᴛ ⋟",callback_data=f"next_{req}_{key}_{offset}")]
+            [InlineKeyboardButton(pagsyd,callback_data="pages"), InlineKeyboardButton(text="Nᴇxᴛ ⋟",callback_data=f"next_{req}_{key}_{offset}")]
         )
     else:
         btn.append(
