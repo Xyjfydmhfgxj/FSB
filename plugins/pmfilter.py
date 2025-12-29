@@ -218,10 +218,11 @@ async def next_page(bot, query):
                 off_set = offset - 10
             if n_offset == 0:
                 btn.append(
-                    [InlineKeyboardButton("⋞ ʙΔᴄᴋ", callback_data=f"next_{req}_{key}_{off_set}"), InlineKeyboardButton(f"{math.ceil(int(offset)/10)+1} / {math.ceil(total/10)}", callback_data="pages")]
+                    [InlineKeyboardButton("⋞ ʙΔᴄᴋ", callback_data=f"next_{req}_{key}_{off_set}"), InlineKeyboardButton(f"Pᴀɢᴇ {math.ceil(int(offset)/10)+1} / {math.ceil(total/10)}", callback_data="pages")]
                 )
             elif off_set is None:
-                btn.append([InlineKeyboardButton("Pᴀɢᴇ {math.ceil(int(offset)/10)+1} / {math.ceil(total/10)}", callback_data="pages"), InlineKeyboardButton("ɴᴇxᴛ ⋟", callback_data=f"next_{req}_{key}_{n_offset}")])
+                pagsyd = "Pᴀɢᴇ {math.ceil(int(offset)/10)+1} / {math.ceil(total/10)}" if total else "Pᴀɢᴇ 1"
+                btn.append([InlineKeyboardButton(pagsyd, callback_data="pages"), InlineKeyboardButton("ɴᴇxᴛ ⋟", callback_data=f"next_{req}_{key}_{n_offset}")])
             else:
                 btn.append(
                     [
@@ -242,7 +243,8 @@ async def next_page(bot, query):
                     [InlineKeyboardButton("⋞ ʙΔᴄᴋ", callback_data=f"next_{req}_{key}_{off_set}"), InlineKeyboardButton(f"{math.ceil(int(offset)/int(MAX_B_TN))+1} / {math.ceil(total/int(MAX_B_TN))}", callback_data="pages")]
                 )
             elif off_set is None:
-                btn.append([InlineKeyboardButton("ᴘᴀGᴇ", callback_data="pages"), InlineKeyboardButton(f"{math.ceil(int(offset)/int(MAX_B_TN))+1} / {math.ceil(total/int(MAX_B_TN))}", callback_data="pages"), InlineKeyboardButton("ɴᴇxᴛ ⋟", callback_data=f"next_{req}_{key}_{n_offset}")])
+                pagsyd = "Pᴀɢᴇ {math.ceil(int(offset)/int(MAX_B_TN))+1} / {math.ceil(total/int(MAX_B_TN))}" if total else "Pᴀɢᴇ 1"
+                btn.append([InlineKeyboardButton(pagsyd, callback_data="pages"), InlineKeyboardButton("ɴᴇxᴛ ⋟", callback_data=f"next_{req}_{key}_{n_offset}")])
             else:
                 btn.append(
                     [
@@ -459,18 +461,21 @@ async def filter_qualities_cb_handler(client: Client, query: CallbackQuery):
     if offset != "":
         try:
             if settings['max_btn']:
+                pagsyd = "Pᴀɢᴇ 1/{math.ceil(int(total_results)/10)}" if total_results else "Pᴀɢᴇ 1"
                 btn.append(
-                    [InlineKeyboardButton("ᴘᴀGᴇ", callback_data="pages"), InlineKeyboardButton(text=f"1/{math.ceil(int(total_results)/10)}",callback_data="pages"), InlineKeyboardButton(text="ɴᴇxᴛ ⋟",callback_data=f"next_{req}_{key}_{offset}")]
+                    [InlineKeyboardButton(pagsyd,callback_data="pages"), InlineKeyboardButton(text="ɴᴇxᴛ ⋟",callback_data=f"next_{req}_{key}_{offset}")]
                 )
     
             else:
+                pagsyd = "Pᴀɢᴇ 1/{math.ceil(int(total_results)/int(MAX_B_TN))}" if total_results else "Pᴀɢᴇ 1"
                 btn.append(
-                    [InlineKeyboardButton("ᴘᴀGᴇ", callback_data="pages"), InlineKeyboardButton(text=f"1/{math.ceil(int(total_results)/int(MAX_B_TN))}",callback_data="pages"), InlineKeyboardButton(text="ɴᴇxᴛ ⋟",callback_data=f"next_{req}_{key}_{offset}")]
+                    [InlineKeyboardButton(pagsyd,callback_data="pages"), InlineKeyboardButton(text="ɴᴇxᴛ ⋟",callback_data=f"next_{req}_{key}_{offset}")]
                 )
         except KeyError:
             await save_group_settings(query.message.chat.id, 'max_btn', True)
+            pagsyd = "Pᴀɢᴇ 1/{math.ceil(int(total_results)/10)}" if total_results else "Pᴀɢᴇ 1"
             btn.append(
-                [InlineKeyboardButton("ᴘᴀGᴇ", callback_data="pages"), InlineKeyboardButton(text=f"1/{math.ceil(int(total_results)/10)}",callback_data="pages"), InlineKeyboardButton(text="ɴᴇxᴛ ⋟",callback_data=f"next_{req}_{key}_{offset}")]
+                [InlineKeyboardButton(pagsyd,callback_data="pages"), InlineKeyboardButton(text="ɴᴇxᴛ ⋟",callback_data=f"next_{req}_{key}_{offset}")]
             )
     else:
         btn.append(
@@ -631,18 +636,21 @@ async def filter_languages_cb_handler(client: Client, query: CallbackQuery):
     if offset != "":
         try:
             if settings['max_btn']:
+                pagsyd = "Pᴀɢᴇ 1/{math.ceil(int(total_results)/10)}" if total_results else "Pᴀɢᴇ 1"
                 btn.append(
-                    [InlineKeyboardButton("ᴘᴀGᴇ", callback_data="pages"), InlineKeyboardButton(text=f"1/{math.ceil(int(total_results)/10)}",callback_data="pages"), InlineKeyboardButton(text="ɴᴇxᴛ ⋟",callback_data=f"next_{req}_{key}_{offset}")]
+                    [InlineKeyboardButton(pagsyd,callback_data="pages"), InlineKeyboardButton(text="ɴᴇxᴛ ⋟",callback_data=f"next_{req}_{key}_{offset}")]
                 )
     
             else:
+                pagsyd = "Pᴀɢᴇ 1/{math.ceil(int(total_results)/int(MAX_B_TN))}" if total_results else "Pᴀɢᴇ 1"
                 btn.append(
-                    [InlineKeyboardButton("ᴘᴀGᴇ", callback_data="pages"), InlineKeyboardButton(text=f"1/{math.ceil(int(total_results)/int(MAX_B_TN))}",callback_data="pages"), InlineKeyboardButton(text="ɴᴇxᴛ ⋟",callback_data=f"next_{req}_{key}_{offset}")]
+                    [InlineKeyboardButton(pagsyd,callback_data="pages"), InlineKeyboardButton(text="ɴᴇxᴛ ⋟",callback_data=f"next_{req}_{key}_{offset}")]
                 )
         except KeyError:
             await save_group_settings(query.message.chat.id, 'max_btn', True)
+            pagsyd = "Pᴀɢᴇ 1/{math.ceil(int(total_results)/10)}" if total_results else "Pᴀɢᴇ 1"
             btn.append(
-                [InlineKeyboardButton("ᴘᴀGᴇ", callback_data="pages"), InlineKeyboardButton(text=f"1/{math.ceil(int(total_results)/10)}",callback_data="pages"), InlineKeyboardButton(text="ɴᴇxᴛ ⋟",callback_data=f"next_{req}_{key}_{offset}")]
+                [InlineKeyboardButton(pagsyd,callback_data="pages"), InlineKeyboardButton(text="ɴᴇxᴛ ⋟",callback_data=f"next_{req}_{key}_{offset}")]
             )
     else:
         btn.append(
@@ -2700,11 +2708,10 @@ async def auto_filter(client, msg, spoll=False, syd: int | None = None):
             req = syd
             try:
                 if settings.get("max_btn"):
+                    pagsyd = "Pᴀɢᴇ 1/{math.ceil(int(total_results)/10)}" if total_results else "Pᴀɢᴇ 1"
                     btn.append(
                         [
-                            InlineKeyboardButton("ᴘΔɢᴇ", callback_data="pages"),
-                            InlineKeyboardButton(
-                                text=f"1/{math.ceil(int(total_results) / 10)}",
+                            InlineKeyboardButton(pagsyd,
                                 callback_data="pages",
                             ),
                             InlineKeyboardButton(
@@ -2714,11 +2721,10 @@ async def auto_filter(client, msg, spoll=False, syd: int | None = None):
                         ]
                     )
                 else:
+                    pagsyd = "Pᴀɢᴇ 1/{math.ceil(int(total_results)/int(MAX_B_TN))}" if total_results else "Pᴀɢᴇ 1"
                     btn.append(
                         [
-                            InlineKeyboardButton("ᴘΔɢᴇ", callback_data="pages"),
-                            InlineKeyboardButton(
-                                text=f"1/{math.ceil(int(total_results) / int(MAX_B_TN))}",
+                            InlineKeyboardButton(pagsyd,
                                 callback_data="pages",
                             ),
                             InlineKeyboardButton(
@@ -2729,11 +2735,10 @@ async def auto_filter(client, msg, spoll=False, syd: int | None = None):
                     )
             except KeyError:
                 await save_group_settings(syd, "max_btn", True)
+                pagsyd = "Pᴀɢᴇ 1/{math.ceil(int(total_results)/10)}" if total_results else "Pᴀɢᴇ 1"
                 btn.append(
                     [
-                        InlineKeyboardButton("ᴘΔɢᴇ", callback_data="pages"),
-                        InlineKeyboardButton(
-                            text=f"1/{math.ceil(int(total_results) / 10)}",
+                        InlineKeyboardButton(pagsyd,
                             callback_data="pages",
                         ),
                         InlineKeyboardButton(
@@ -2786,7 +2791,7 @@ async def auto_filter(client, msg, spoll=False, syd: int | None = None):
         return
         
     if spoll:
-        message = msg.reply_to_message  
+        message = msg.reply_to_message
     else:
         message = msg
     sydm=await message.reply("Sᴇᴀʀᴄʜɪɴɢ !", quote=True)
