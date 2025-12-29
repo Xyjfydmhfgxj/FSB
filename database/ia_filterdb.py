@@ -207,27 +207,18 @@ def expand_language_variants(query: str) -> list[str]:
     return variants
 
 
+
 async def get_search_results(client, chat_id, query, file_type=None, max_results=10, offset=0, filter=False):
-    """For given query return (results, next_offset, total_results)"""
     try:
+        # -------- SETTINGS --------
         if chat_id is not None:
-            settings = await get_settings(int(chat_id))
-            try:
-                if settings['max_btn']:
-                    max_results = 10
-                else:
-                    max_results = int(MAX_B_TN)
-            except KeyError:
-                await save_group_settings(int(chat_id), 'max_btn', False)
-                settings = await get_settings(int(chat_id))
-                if settings['max_btn']:
-                    max_results = 10
-                else:
-                    max_results = int(MAX_B_TN)
+            s = await get_settings(int(chat_id))
+            max_results = 10 if s.get("max_btn") else int(MAX_B_TN)
 
+        # -------- REGEX LOGIC (UNCHANGED) --------
         query = query.strip()
-
         search_variants = expand_numbers(query)
+
         season_match = re.search(r"\b(?:season\s*(\d{1,2})|s0*(\d{1,2}))\b", query, re.IGNORECASE)
         # Episode detection
         episode_match = re.search(r"\b(?:episode\s*(\d{1,3})|e[p]?0*(\d{1,3}))\b", query, re.IGNORECASE)
@@ -271,8 +262,7 @@ async def get_search_results(client, chat_id, query, file_type=None, max_results
 
         # Expand language keywords
         search_variants.append(re.sub("&", "and", query))
-
-        # Expand language keywords
+        search_variants.append(re.sub("O", "0", query))
         expanded_variants = []
         for q in search_variants:
             expanded_variants.extend(expand_language_variants(q))
@@ -297,71 +287,47 @@ async def get_search_results(client, chat_id, query, file_type=None, max_results
                 )
                 continue
 
-        
 
-        #if USE_CAPTION_FILTER:
-           # filter = {"$or": [{"file_name": {"$in": regex_list}}, {"caption": {"$in": regex_list}}]}
-       # else:
-           # filter = {"file_name": {"$in": regex_list}}
-
-       # if file_type:
-          #  filter["file_type"] = file_type
-
-       # cursor = Media.find(filter, {"file_name": 1, "caption": 1, "file_size": 1, "file_id": 1})
-        #cursor.sort("$natural", -1).skip(offset).limit(max_results + 1)
-      #  docs = await cursor.to_list(length=max_results + 1)
-
-       # files = docs[:max_results]
-       # next_offset = offset + max_results if len(docs) > max_results else ""
-       # total_results = offset + len(files)
-
-
-       # return files, next_offset, total_results
-                   # after building regex_list
-            # after building regex_list
-    
-
+        # -------- FILTER --------
         filter = {"file_name": {"$in": regex_list}}
         if file_type:
             filter["file_type"] = file_type
 
+        async def fetch(model, skip, limit):
+            return await model.find(filter).sort("$natural", -1).skip(skip).limit(limit).to_list(limit)
 
-        async def search_db(model):
-            cursor = model.find(filter)
-            cursor.sort("$natural", -1).skip(offset).limit(max_results)
-            files = await cursor.to_list(length=max_results)
-            return files
+        # -------- COUNT (except first page) --------
+        db2_count = None
+        if offset > 0:
+            db2_count = await Media2.count_documents(filter)
 
-        files2, files1, count2, count1 = await asyncio.gather(
-            search_db(Media2),
-            search_db(Media1),
-            Media2.count_documents(filter),
-            Media1.count_documents(filter)
-        )
+        results = []
 
-        combined = files2 + files1
-        combined = combined[:max_results]
+        # -------- FETCH LOGIC --------
+        if db2_count is None or offset < db2_count:
+            skip2 = offset if db2_count is None else offset
+            results = await fetch(Media2, skip2, max_results)
 
-        total_results = count1 + count2
+            if len(results) < max_results:
+                used = len(results)
+                results += await fetch(Media1, 0, max_results - used)
+        else:
+            results = await fetch(Media1, offset - db2_count, max_results)
 
-        next_offset = offset + max_results if (offset + max_results) < total_results else ""
+        # -------- NEXT & TOTAL --------
+        next_offset = offset + max_results if len(results) == max_results else ""
+        total_results = None
 
-        return combined, next_offset, total_results
-        
-    # get total matching results (can be slow for huge collection)
-        total_results = await Media.count_documents(filter)
+        if offset > 0:
+            c1, c2 = await asyncio.gather(
+                Media1.count_documents(filter),
+                Media2.count_documents(filter)
+            )
+            total_results = c1 + c2
+        elif offset == 0 and len(results) < max_results:
+            total_results = len(results)
 
-    # fetch only what we need
-        cursor = Media.find(filter)
-        cursor.sort("$natural", -1)
-        cursor.skip(offset).limit(max_results)
-        files = await cursor.to_list(length=max_results)
-
-    # calculate next offset (allowing total_results to exceed max_results)
-        next_offset = offset + max_results if (offset + max_results) < total_results else ""
-
-        return files, next_offset, total_results
-
+        return results, next_offset, total_results
 
     except Exception as e:
         await client.send_message(
