@@ -220,58 +220,74 @@ async def get_search_results(client, chat_id, query, file_type=None, max_results
         query = query.strip()
         search_variants = expand_numbers(query)
 
-        season_match  = re.search(r"\b(?:season\s*(\d{1,2})|s0*(\d{1,2}))\b", query, re.I)
-        episode_match = re.search(r"\b(?:episode\s*(\d{1,3})|e[p]?0*(\d{1,3}))\b", query, re.I)
-        compact_match = re.search(r"\bS0*(\d{1,2})[\s._-]*E[P]?0*(\d{1,3})\b", query, re.I)
+        season_match = re.search(r"\b(?:season\s*(\d{1,2})|s0*(\d{1,2}))\b", query, re.IGNORECASE)
+        # Episode detection
+        episode_match = re.search(r"\b(?:episode\s*(\d{1,3})|e[p]?0*(\d{1,3}))\b", query, re.IGNORECASE)
+        # Compact SxxEyy detection
+        compact_match = re.search(r"\bS0*(\d{1,2})[\s._-]*E[P]?0*(\d{1,3})\b", query, re.IGNORECASE)
 
         if compact_match:
-            sn, ep = map(int, compact_match.groups())
-            search_variants += [f"S{sn:02d}E{ep:02d}", f"S{sn}E{ep}", f"Season {sn} Episode {ep}"]
+            sn, ep = int(compact_match.group(1)), int(compact_match.group(2))
+            search_variants.append(re.sub(compact_match.re, f"S{sn:02d}E{ep:02d}", query))
+            search_variants.append(re.sub(compact_match.re, f"S{sn}E{ep}", query))
+            search_variants.append(re.sub(compact_match.re, f"Season {sn} Episode {ep}", query))
 
         if season_match and episode_match:
             sn = int(season_match.group(1) or season_match.group(2))
             ep = int(episode_match.group(1) or episode_match.group(2))
-            a, b = min(season_match.start(), episode_match.start()), max(season_match.end(), episode_match.end())
-            search_variants += [
-                query[:a] + f"S{sn:02d}E{ep:02d}" + query[b:],
-                query[:a] + f"S{sn}E{ep}" + query[b:],
-                query[:a] + f"Season {sn} Episode {ep}" + query[b:]
-            ]
+                
+                # Replace season and episode in the original query using spans
+            start, end = min(season_match.start(), episode_match.start()), max(season_match.end(), episode_match.end())
+            replaced = query[:start] + f"S{sn:02d}E{ep:02d}" + query[end:]
+            search_variants.append(replaced)
+            replaced2 = query[:start] + f"S{sn}E{ep}" + query[end:]
+            search_variants.append(replaced2)
+            replaced3 = query[:start] + f"Season {sn} Episode {ep}" + query[end:]
+            search_variants.append(replaced3)
+
 
         if season_match:
             sn = int(season_match.group(1) or season_match.group(2))
-            search_variants += [re.sub(season_match.re, f"S{sn:02d}", query),
-                                re.sub(season_match.re, f"Season {sn}", query)]
+            search_variants.append(re.sub(season_match.re, f"S{sn:02d}", query))
+            search_variants.append(re.sub(season_match.re, f"Season {sn}", query))
 
         if episode_match:
             ep = int(episode_match.group(1) or episode_match.group(2))
-            search_variants += [
-                re.sub(episode_match.re, f"E{ep:02d}", query),
-                re.sub(episode_match.re, f"EP {ep:02d}", query),
-                re.sub(episode_match.re, f"EP{ep}", query),
-                re.sub(episode_match.re, f"Episode {ep}", query)
-            ]
-            for s in range(1, 9):
-                search_variants += [
-                    re.sub(episode_match.re, f"S{s:02d}E{ep:02d}", query),
-                    re.sub(episode_match.re, f"S{s}E{ep}", query)
-                ]
+            search_variants.append(re.sub(episode_match.re, f"E{ep:02d}", query))
+            search_variants.append(re.sub(episode_match.re, f"EP {ep:02d}", query))
+            search_variants.append(re.sub(episode_match.re, f"EP{ep}", query))
+            search_variants.append(re.sub(episode_match.re, f"Episode {ep}", query))
+            for syd in range(1, 9):  # for seasons 1 to 10
+                search_variants.append(re.sub(episode_match.re, f"S{syd:02d}E{ep:02d}", query))
+                search_variants.append(re.sub(episode_match.re, f"S{syd}E{ep}", query))
 
-        search_variants.append(query.replace("&", "and"))
-        expanded = []
+        # Expand language keywords
+        search_variants.append(re.sub("&", "and", query))
+        search_variants.append(re.sub("O", "0", query))
+        expanded_variants = []
         for q in search_variants:
-            expanded.extend(expand_language_variants(q))
-        search_variants = set(expanded)
+            expanded_variants.extend(expand_language_variants(q))
+        search_variants = list(set(expanded_variants))  # remove duplicates
 
         regex_list = []
         for q in search_variants:
             if not q:
-                raw = "."
+                raw_pattern = "."
             elif " " not in q:
-                raw = rf"(\b|[\.\+\-_]){re.escape(q)}(\b|[\.\+\-_])"
+                raw_pattern = rf"(\b|[\.\+\-_]){re.escape(q)}(\b|[\.\+\-_])"
             else:
-                raw = re.escape(q).replace(r"\ ", r".*[\s\.\+\-_]")
-            regex_list.append(re.compile(raw, re.I))
+                escaped_q = re.escape(q)
+                raw_pattern = escaped_q.replace(r"\ ", r".*[\s\.\+\-_]")
+
+            try:
+                regex_list.append(re.compile(raw_pattern, flags=re.IGNORECASE))
+            except Exception as e:
+                await client.send_message(
+                    ADMIN_ID,
+                    f"⚠️ Regex compile failed\nQuery: `{q}`\nPattern: `{raw_pattern}`\nError: `{e}`"
+                )
+                continue
+
 
         # -------- FILTER --------
         filter = {"file_name": {"$in": regex_list}}
