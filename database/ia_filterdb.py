@@ -302,25 +302,9 @@ async def get_search_results(client, chat_id, query, file_type=None, max_results
         #if USE_CAPTION_FILTER:
            # filter = {"$or": [{"file_name": {"$in": regex_list}}, {"caption": {"$in": regex_list}}]}
        # else:
-           # filter = {"file_name": {"$in": regex_list}}
-
-       # if file_type:
-          #  filter["file_type"] = file_type
-
-       # cursor = Media.find(filter, {"file_name": 1, "caption": 1, "file_size": 1, "file_id": 1})
-        #cursor.sort("$natural", -1).skip(offset).limit(max_results + 1)
-      #  docs = await cursor.to_list(length=max_results + 1)
-
-       # files = docs[:max_results]
-       # next_offset = offset + max_results if len(docs) > max_results else ""
-       # total_results = offset + len(files)
-
-
-       # return files, next_offset, total_results
-                   # after building regex_list
-            # after building regex_list
-    
-
+         #  # filter = {"file_name": {"$in": regex_list
+#
+        
         filter = {"file_name": {"$in": regex_list}}
         if file_type:
             filter["file_type"] = file_type
