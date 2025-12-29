@@ -322,7 +322,7 @@ async def get_search_results(client, chat_id, query, file_type=None, max_results
         next_offset = offset + max_results if len(results) == max_results else ""
         total_results = None
 
-        if offset > 0:
+        if offset == 10:
             c1, c2 = await asyncio.gather(
                 Media1.count_documents(filter),
                 Media2.count_documents(filter)
