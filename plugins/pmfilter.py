@@ -2687,10 +2687,10 @@ async def auto_filter(client, msg, spoll=False):
     else:
         if not tsxt:
             syud = message.chat.title if message.chat.title else "Bot Cracker"              #Fix-ed by @Syd_Xyz
-            cap = f"<b>Sᴇᴀʀᴄʜ Rᴇꜱᴜʟᴛꜱ Fᴏʀ : <code>{search}</code></b>\n<blockquote><b>◈ Tᴏᴛᴀʟ ꜰɪʟᴇꜱ : <code>{total_results}</code>\n◈ Pᴏᴡᴇʀᴇᴅ ʙʏ : {syud} </b></blockquote>"  #Fix-ed by @Syd_Xyz
+            cap = f"<b>Sᴇᴀʀᴄʜ Rᴇꜱᴜʟᴛꜱ Fᴏʀ : <code>{search}</code></b>\n<blockquote><b>◈ Tᴏᴛᴀʟ ꜰɪʟᴇꜱ : <code>12+</code>\n◈ Pᴏᴡᴇʀᴇᴅ ʙʏ : {syud} </b></blockquote>"  #Fix-ed by @Syd_Xyz
         else:
             syud = message.chat.title if message.chat.title else "Bot Cracker"              #Fix-ed by @Syd_Xyz
-            cap = f"<b>Sᴇᴀʀᴄʜ Rᴇꜱᴜʟᴛꜱ Fᴏʀ : <code>{search}</code></b>\n<blockquote><b>◈ Tᴏᴛᴀʟ ꜰɪʟᴇꜱ : <code>{total_results}</code>\n◈ Pᴏᴡᴇʀᴇᴅ ʙʏ : {syud} </b></blockquote>\n\n"  #Fix-ed by @Syd_Xyz
+            cap = f"<b>Sᴇᴀʀᴄʜ Rᴇꜱᴜʟᴛꜱ Fᴏʀ : <code>{search}</code></b>\n<blockquote><b>◈ Tᴏᴛᴀʟ ꜰɪʟᴇꜱ : <code>12+</code>\n◈ Pᴏᴡᴇʀᴇᴅ ʙʏ : {syud} </b></blockquote>\n\n"  #Fix-ed by @Syd_Xyz
         # cap+="<b>Hᴇʏ {message.from_user.mention}, Hᴇʀᴇ ɪs ᴛʜᴇ ʀᴇsᴜʟᴛ ғᴏʀ ʏᴏᴜʀ ᴏ̨ᴜᴇʀʏ {search} \n\n</b>"
             for file in files:
                 cap += f"<b><a href='https://telegram.me/{temp.U_NAME}?start=files_{file.file_id}'> 📁 {get_size(file.file_size)} ▷ {' '.join(filter(lambda x: not x.startswith('[') and not x.startswith('@') and not x.startswith('www.'), file.file_name.split()))}\n\n</a></b>"
