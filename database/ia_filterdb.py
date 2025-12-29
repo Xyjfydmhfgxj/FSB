@@ -316,6 +316,18 @@ async def get_search_results(client, chat_id, query, file_type=None, max_results
             files = await cursor.to_list(length=max_results)
             return files
 
+        if offset == 0:
+            files2, files1 = await asyncio.gather(
+            search_db(Media2),
+            search_db(Media1)
+            )
+
+            combined = (files2 + files1)[:max_results]
+            next_offset = max_results if len(combined) == max_results else ""
+            total_results = None
+            return combined, next_offset, total_results
+
+
         files2, files1, count2, count1 = await asyncio.gather(
             search_db(Media2),
             search_db(Media1),
