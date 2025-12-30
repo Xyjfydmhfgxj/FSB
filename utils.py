@@ -117,7 +117,10 @@ async def get_authchannel(bot, query):
 
     # If no DB doc -> prompt first one or two auth channels
     if not doc:
-        return no_db_response()
+        for ch in auth_list:
+            if not await _is_member(bot, ch, user_id):
+                return no_db_response()
+        return True, None, None
 
     channels = doc.get("channels", []) or []
     count = doc.get("count", 0)
