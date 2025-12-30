@@ -115,12 +115,21 @@ async def get_authchannel(bot, query):
         else:
             return m.status != enums.ChatMemberStatus.BANNED
 
-    # If no DB doc -> prompt first one or two auth channels
     if not doc:
+        missing = []
         for ch in auth_list:
             if not await _is_member(bot, ch, user_id):
-                return no_db_response()
+                missing.append(ch)
+            if len(missing) == 2:
+                break
+
+        if missing:
+            ch1 = missing[0]
+            ch2 = missing[1] if len(missing) > 1 else None
+            return False, ch1, ch2
+
         return True, None, None
+
 
     channels = doc.get("channels", []) or []
     count = doc.get("count", 0)
