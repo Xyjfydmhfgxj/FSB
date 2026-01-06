@@ -256,7 +256,7 @@ class Database:
             {"$set": {"file_id": file_id, "mess": mess}},
             upsert=True
         )
-    async def get_stored_file_id(self, user_id: int) -> dict | None:
+    async def get_stored_file_id(self, user_id: int): #-> dict | None:
         return await self.all.find_one({"_id": user_id})
         
 
