@@ -2588,7 +2588,7 @@ async def auto_flter(client, msg, spoll=False):
             await msg.reply(f"❌ An unexpected error occurred. {e}")
 
 
-async def auto_filter(client, msg, spoll=False, syd: int | None = None):
+async def auto_filter(client, msg, spoll=False, syd=None):
     if syd:
         mrsyd = None
         text = (msg or "").strip()
