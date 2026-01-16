@@ -386,7 +386,7 @@ async def jreq_menu(client, message):
         [InlineKeyboardButton("✖ Close", callback_data="fsyd_close")]
     ])
 
-   ₹ await message.reply(
+   #₹ await message.reply(
     #    "**📂 Join-Request Manager**\nSelect an option:",
  #       reply_markup=keyboard
  #   )
