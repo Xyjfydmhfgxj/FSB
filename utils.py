@@ -57,10 +57,7 @@ class temp(object):
     FORCE_WAIT = {}
 
 
-async def get_total_db_size_mb(db):
-    stats = await db.command("dbStats")
-    return stats["dataSize"] + stats["indexSize"]
-    
+
 async def is_subscribed(bot, query=None, userid=None):
     try:
         if userid == None and query != None:
