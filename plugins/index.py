@@ -47,7 +47,7 @@ async def ask_skip(bot: Client, user_id: int) -> int:
     try:
         msg = await bot.ask(
             chat_id=user_id,
-            text="Send skip number (integer)\nOr send `/skip` to start from beginning",
+            text="Send skip number (integer)\nOr send /skip to start from beginning",
             timeout=60
         )
 
