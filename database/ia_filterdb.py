@@ -8,7 +8,7 @@ from pymongo.errors import DuplicateKeyError
 from umongo import Instance, Document, fields
 from motor.motor_asyncio import AsyncIOMotorClient
 from marshmallow.exceptions import ValidationError
-from info import DATABASE_URI, DATABASE_URI2, DATABASE_NAME, COLLECTION_NAME, USE_CAPTION_FILTER, MAX_B_TN
+from info import DATABASE_URI, DATABASE_URI2, DATABASE_URI3, DATABASE_URI4, DATABASE_NAME, COLLECTION_NAME, USE_CAPTION_FILTER, MAX_B_TN
 from utils import get_settings, save_group_settings
 
 logger = logging.getLogger(__name__)
@@ -22,6 +22,14 @@ instance1 = Instance.from_db(db1)
 client2 = AsyncIOMotorClient(DATABASE_URI2)
 db2 = client2[DATABASE_NAME]
 instance2 = Instance.from_db(db2)
+
+client3 = AsyncIOMotorClient(DATABASE_URI3)
+db3 = client3[DATABASE_NAME]
+instance3 = Instance.from_db(db3)
+
+client4 = AsyncIOMotorClient(DATABASE_URI4)
+db4 = client4[DATABASE_NAME]
+instance4 = Instance.from_db(db4)
 
 
 @instance1.register
@@ -53,10 +61,48 @@ class Media2(Document):
         indexes = ('$file_name',)
         collection_name = COLLECTION_NAME
 
+@instance3.register
+class Media3(Document):
+    file_id = fields.StrField(attribute='_id')
+    file_ref = fields.StrField(allow_none=True)
+    file_name = fields.StrField(required=True)
+    file_size = fields.IntField(required=True)
+    file_type = fields.StrField(allow_none=True)
+    mime_type = fields.StrField(allow_none=True)
+    caption = fields.StrField(allow_none=True)
 
+    class Meta:
+        indexes = ('$file_name',)
+        collection_name = COLLECTION_NAME
 
-async def save_file(media, use_db=1):
-    model = Media1 if use_db == 1 else Media2
+@instance4.register
+class Media4(Document):
+    file_id = fields.StrField(attribute='_id')
+    file_ref = fields.StrField(allow_none=True)
+    file_name = fields.StrField(required=True)
+    file_size = fields.IntField(required=True)
+    file_type = fields.StrField(allow_none=True)
+    mime_type = fields.StrField(allow_none=True)
+    caption = fields.StrField(allow_none=True)
+
+    class Meta:
+        indexes = ('$file_name',)
+        collection_name = COLLECTION_NAME
+
+def get_model(use_db: int):
+    if use_db == 1:
+        return Media1
+    elif use_db == 2:
+        return Media2
+    elif use_db == 3:
+        return Media3
+    elif use_db == 4:
+        return Media4
+    else:
+        return Media3
+        
+async def save_file(media, use_db=3):
+    model = get_model(use_db)
     # TODO: Find better way to get same file_id for same media to avoid duplicates
     file_id, file_ref = unpack_new_file_id(media.file_id)
     
@@ -67,6 +113,16 @@ async def save_file(media, use_db=1):
 
     exists_db2 = await Media2.find_one({"file_id": file_id})
     if exists_db2:
+        logger.warning(f"File already exists in Media2 → Skipping save.")
+        return False, 0
+
+    exists_db3 = await Media3.find_one({"file_id": file_id})
+    if exists_db3:
+        logger.warning(f"File already exists in Media2 → Skipping save.")
+        return False, 0
+
+    exists_db4 = await Media4.find_one({"file_id": file_id})
+    if exists_db4:
         logger.warning(f"File already exists in Media2 → Skipping save.")
         return False, 0
         
@@ -300,37 +356,79 @@ async def get_search_results(client, chat_id, query, file_type=None, max_results
             return await model.find(filter).sort("$natural", -1).skip(skip).limit(limit).to_list(limit)
 
         # -------- COUNT (except first page) --------
-        db2_count = None
+        db4_count = db3_count = db2_count = None
         if offset > 0:
-            db2_count = await Media2.count_documents(filter)
+            db4_count, db3_count, db2_count = await asyncio.gather(
+                Media4.count_documents(filter),
+                Media3.count_documents(filter),
+                Media2.count_documents(filter)
+            )
 
         results = []
 
         # -------- FETCH LOGIC --------
-        if db2_count is None or offset < db2_count:
-            skip2 = offset if db2_count is None else offset
-            results = await fetch(Media2, skip2, max_results)
+        if db4_count is None or offset < db4_count:
+            # Media4
+            results = await fetch(Media4, offset, max_results)
+
+            if len(results) < max_results:
+                used = len(results)
+                results += await fetch(Media3, 0, max_results - used)
+
+                if len(results) < max_results:
+                    used = len(results)
+                    results += await fetch(Media2, 0, max_results - used)
+
+                    if len(results) < max_results:
+                        used = len(results)
+                        results += await fetch(Media1, 0, max_results - used)
+
+        elif offset < db4_count + db3_count:
+            # Media3
+            results = await fetch(Media3, offset - db4_count, max_results)
+
+            if len(results) < max_results:
+                used = len(results)
+                results += await fetch(Media2, 0, max_results - used)
+
+                if len(results) < max_results:
+                    used = len(results)
+                    results += await fetch(Media1, 0, max_results - used)
+
+        elif offset < db4_count + db3_count + db2_count:
+            # Media2
+            results = await fetch(Media2, offset - db4_count - db3_count, max_results)
 
             if len(results) < max_results:
                 used = len(results)
                 results += await fetch(Media1, 0, max_results - used)
+
         else:
-            results = await fetch(Media1, offset - db2_count, max_results)
+            # Media1
+            results = await fetch(
+                Media1,
+                offset - db4_count - db3_count - db2_count,
+                max_results
+            )
 
         # -------- NEXT & TOTAL --------
         next_offset = offset + max_results if len(results) == max_results else ""
         total_results = None
 
         if offset == 10:
-            c1, c2 = await asyncio.gather(
+            c1, c2, c3, c4 = await asyncio.gather(
                 Media1.count_documents(filter),
-                Media2.count_documents(filter)
+                Media2.count_documents(filter),
+                Media3.count_documents(filter),
+                Media4.count_documents(filter)
             )
-            total_results = c1 + c2
-        elif offset == 0 and len(results) < max_results:
+            total_results = c1 + c2 + c3 + c4
+
+        elif offset == 0 and not next_offset:
             total_results = len(results)
 
         return results, next_offset, total_results
+
 
     except Exception as e:
         await client.send_message(
