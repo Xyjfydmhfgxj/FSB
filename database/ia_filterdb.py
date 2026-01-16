@@ -741,3 +741,9 @@ def unpack_new_file_id(new_file_id):
     )
     file_ref = encode_file_ref(decoded.file_reference)
     return file_id, file_ref
+
+
+async def get_total_db_size_mb(db):
+    stats = await db.command("dbStats")
+    return stats["dataSize"] + stats["indexSize"]
+    
