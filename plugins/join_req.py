@@ -386,10 +386,10 @@ async def jreq_menu(client, message):
         [InlineKeyboardButton("✖ Close", callback_data="fsyd_close")]
     ])
 
-    await message.reply(
-        "**📂 Join-Request Manager**\nSelect an option:",
-        reply_markup=keyboard
-    )
+   ₹ await message.reply(
+    #    "**📂 Join-Request Manager**\nSelect an option:",
+ #       reply_markup=keyboard
+ #   )
 
 #@Client.on_callback_query(filters.regex("^bot_fsub_back$") & filters.user(ADMINS))
 async def fsub_back(client, cb):
@@ -522,11 +522,10 @@ async def jsyd_callback(client, cb):
             "• Use /cancel to abort."
         )
         try:
-            m = await client.listen(
-                cb.from_user.id,
-                timeout=120,
-                filters=filters.user(cb.from_user.id)
-            )
+            m = await client.listen(cb.from_user.id, timeout=120)
+
+            if m.from_user.id != cb.from_user.id:
+                return await cb.message.edit_text("❌ Unauthorized input.")
 
             if m.text and m.text.lower() == "/cancel":
                 return await cb.message.edit_text("❌ Cancelled.")
