@@ -36,7 +36,7 @@ async def auto(bot, message):
                 
                 # Save the media file
                 try:
-                    aynav, vnay = await save_file(media, 2)
+                    aynav, vnay = await save_file(media, 4)
                     if aynav:
                         logger.info("File successfully indexed and saved.")
                     elif vnay == 0:
