@@ -2,8 +2,8 @@ from pyrogram import Client, filters, enums
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
 from pyrogram.errors.exceptions.bad_request_400 import MessageTooLong, PeerIdInvalid
 from info import ADMINS, LOG_CHANNEL, SUPPORT_CHAT, MELCOW_NEW_USERS, MELCOW_VID, CHNL_LNK, GRP_LNK
-from database.users_chats_db import db, bd
-from database.ia_filterdb import Media1, Media2
+from database.users_chats_db import db, bd, bd4, db3
+from database.ia_filterdb import Media1, Media2, Media3, Media4
 from utils import get_size, temp, get_settings
 from Script import script
 from pyrogram.errors import ChatAdminRequired
@@ -172,8 +172,20 @@ async def get_ststs(bot, message):
     free2 = get_size(free2)
     syd = get_size(await bd.get_syd_size())
     syd2 = get_size(await db.get_syd_size())
+    files3 = await Media3.count_documents()
+    size3 = await db3.get_db_size()
+    free3 = 536870912 - size3
+    size3 = get_size(size3)
+    free3 = get_size(free3)
+    files4 = await Media4.count_documents()
+    size4 = await bd4.get_db_size()
+    free4 = 536870912 - size4
+    size4 = get_size(size4)
+    free4 = get_size(free4)
+    syd = get_size(await bd.get_syd_size())
+    syd2 = get_size(await db.get_syd_size())
     await message.reply(f'{syd} and {syd2}')
-    await rju.edit(script.STATUS_TXT.format(files, files2, total_users, totl_chats, size, free, size2, free2))
+    await rju.edit(script.STATUS_TXT.format(total_users, totl_chats, files, files2, files3, files4, size, free, size2, free2, size3, free3, size4, free4))
 
 
 @Client.on_message(filters.command('invite') & filters.user(ADMINS))
