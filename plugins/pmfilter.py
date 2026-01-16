@@ -17,7 +17,7 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQ
 from pyrogram import Client, filters, enums
 from pyrogram.errors import FloodWait, UserIsBlocked, MessageNotModified, PeerIdInvalid
 from utils import get_size, is_req_subscribed, is_subscribed, get_poster, search_gagala, temp, get_settings, save_group_settings, get_shortlink, get_tutorial, send_all, get_cap
-from database.users_chats_db import db, bd, bd4, db3
+from database.users_chats_db import db, bd
 from database.ia_filterdb import Media1, Media2, Media3, Media4, get_file_details, get_search_results, get_bad_files
 from database.filters_mdb import (
     del_all,
@@ -2207,7 +2207,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
         size3 = get_size(size3)
         free3 = get_size(free3)
         files4 = await Media4.count_documents()
-        size4 = await bd4.get_db_size()
+        size4 = db.Media4.totalSize()
         free4 = 536870912 - size4
         size4 = get_size(size4)
         free4 = get_size(free4)
