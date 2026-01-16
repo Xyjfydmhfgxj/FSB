@@ -17,8 +17,8 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQ
 from pyrogram import Client, filters, enums
 from pyrogram.errors import FloodWait, UserIsBlocked, MessageNotModified, PeerIdInvalid
 from utils import get_size, is_req_subscribed, is_subscribed, get_poster, search_gagala, temp, get_settings, save_group_settings, get_shortlink, get_tutorial, send_all, get_cap
-from database.users_chats_db import db, bd
-from database.ia_filterdb import Media1, Media2, get_file_details, get_search_results, get_bad_files
+from database.users_chats_db import db, bd, bd4, db3
+from database.ia_filterdb import Media1, Media2, Media3, Media4, get_file_details, get_search_results, get_bad_files
 from database.filters_mdb import (
     del_all,
     find_filter,
@@ -2187,54 +2187,83 @@ async def cb_handler(client: Client, query: CallbackQuery):
             InlineKeyboardButton('⟲ ʀᴇғяᴇsʜ ⟲', callback_data='rfrsh')
         ]]
         reply_markup = InlineKeyboardMarkup(buttons)
-        total = await Media.count_documents()
-        total2 = await Media2.count_documents()
-        users = await db.total_users_count()
-        chats = await db.total_chat_count()
-        monsize = await db.get_db_size()
-        monsize2 = await bd.get_db_size()
-        free = 536870912 - monsize
-        free2 = 536870912 - monsize2
-        monsize2 = get_size(monsize2)
-        free2 = get_size(free2)
-        monsize = get_size(monsize)
+        total_users = await db.total_users_count()
+        totl_chats = await db.total_chat_count()
+        files = await Media.count_documents()
+        size = await db.get_db_size()
+        free = 536870912 - size
+        size = get_size(size)
         free = get_size(free)
+        files2 = await Media2.count_documents()
+        size2 = await bd.get_db_size()
+        free2 = 536870912 - size2
+        size2 = get_size(size2)
+        free2 = get_size(free2)
+        syd = get_size(await bd.get_syd_size())
+        syd2 = get_size(await db.get_syd_size())
+        files3 = await Media3.count_documents()
+        size3 = await db3.get_db_size()
+        free3 = 536870912 - size3
+        size3 = get_size(size3)
+        free3 = get_size(free3)
+        files4 = await Media4.count_documents()
+        size4 = await bd4.get_db_size()
+        free4 = 536870912 - size4
+        size4 = get_size(size4)
+        free4 = get_size(free4)
+        syd = get_size(await bd.get_syd_size())
+        syd2 = get_size(await db.get_syd_size())
         await client.edit_message_media(
             query.message.chat.id, 
             query.message.id, 
             InputMediaPhoto(random.choice(PICS))
         )
         await query.message.edit_text(
-            text=script.STATUS_TXT.format(total, total2, users, chats, monsize, free, monsize2, free2),
+            text=script.STATUS_TXT.format(total_users, totl_chats, files, files2, files3, files4, size, free, size2, free2, size3, free3, size4, free4),
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
         )
+    
     elif query.data == "rfrsh":
+        total_users = await db.total_users_count()
+        totl_chats = await db.total_chat_count()
+        files = await Media.count_documents()
+        size = await db.get_db_size()
+        free = 536870912 - size
+        size = get_size(size)
+        free = get_size(free)
+        files2 = await Media2.count_documents()
+        size2 = await bd.get_db_size()
+        free2 = 536870912 - size2
+        size2 = get_size(size2)
+        free2 = get_size(free2)
+        syd = get_size(await bd.get_syd_size())
+        syd2 = get_size(await db.get_syd_size())
+        files3 = await Media3.count_documents()
+        size3 = await db3.get_db_size()
+        free3 = 536870912 - size3
+        size3 = get_size(size3)
+        free3 = get_size(free3)
+        files4 = await Media4.count_documents()
+        size4 = await bd4.get_db_size()
+        free4 = 536870912 - size4
+        size4 = get_size(size4)
+        free4 = get_size(free4)
+        syd = get_size(await bd.get_syd_size())
+        syd2 = get_size(await db.get_syd_size())
         await query.answer("ꜰᴇᴛᴄʜɪɴɢ ᴍᴏɴɢᴏ-ᴅʙ ᴅᴀᴛᴀʙᴀꜱᴇ...")
         buttons = [[
             InlineKeyboardButton('⇇ ʙΔᴄᴋ', callback_data='about'),
             InlineKeyboardButton('⟲ RᴇғʀᴇsH ⟲', callback_data='rfrsh')
         ]]
         reply_markup = InlineKeyboardMarkup(buttons)
-        total = await Media.count_documents()
-        total2 = await Media2.count_documents()
-        users = await db.total_users_count()
-        chats = await db.total_chat_count()
-        monsize = await db.get_db_size()
-        monsize2 = await bd.get_db_size()
-        free = 536870912 - monsize
-        free2 = 536870912 - monsize2
-        monsize2 = get_size(monsize2)
-        free2 = get_size(free2)
-        monsize = get_size(monsize)
-        free = get_size(free)
         await client.edit_message_media(
             query.message.chat.id, 
             query.message.id, 
             InputMediaPhoto(random.choice(PICS))
         )
         await query.message.edit_text(
-            text=script.STATUS_TXT.format(total, total2, users, chats, monsize, free, monsize2, free2),
+            text=script.STATUS_TXT.format(total_users, totl_chats, files, files2, files3, files4, size, free, size2, free2, size3, free3, size4, free4),
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
         )
