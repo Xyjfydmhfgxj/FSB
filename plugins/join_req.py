@@ -550,8 +550,8 @@ async def jsyd_callback(client, cb):
                 f"✅ Added **{len(ids)}** channel(s) to force-sub list."
             )
 
-        except Exception:
-            return await cb.message.edit_text("❌ Invalid input or timeout.")
+        except Exception as e:
+            return await cb.message.edit_text(f"❌ Invalid input or timeout. {e}")
 
 
     if d == "remove_one":
