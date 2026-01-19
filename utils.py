@@ -91,7 +91,6 @@ async def is_req_subscribed(bot, query, syd=AUTH_CHANNEL):
 
 
 async def get_authchannel(bot, query):
-async def get_authchannel(bot, query):
     auth_list = await bd.get_fsub_list()
     if not auth_list:
         return True, None, None
