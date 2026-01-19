@@ -133,7 +133,7 @@ async def get_authchannel(bot, query):
         return promote(missing, 2)
     return promote(missing, 1)
     
-async def get_authchannel(bot, query):
+async def get_authchannnel(bot, query):
     auth_list = await bd.get_fsub_list()
     if not auth_list: return True, None, None
     user_id = query.from_user.id
