@@ -90,7 +90,49 @@ async def is_req_subscribed(bot, query, syd=AUTH_CHANNEL):
 
     return False
 
+async def get_authchannel(bot, query):
+    auth_list = await bd.get_fsub_list()
+    if not auth_list:
+        return True, None, None
+    user_id = query.from_user.id
+    doc = await bd.syd_user(user_id)
+    now = int(time.time())
+    def promote(missing, n):
+        ch1 = missing[0] if len(missing) >= 1 else None
+        ch2 = missing[1] if len(missing) >= 2 and n == 2 else None
+        return False, ch1, ch2
+    if not doc:
+        return promote(auth_list, 2)
+    channels = doc.get("channels", []) or []
+    count = doc.get("count", 0)
+    t = doc.get("time", 0)
+    missing = [c for c in auth_list if c not in channels]
+    joined = len(channels)
+    if not missing:
+        return True, None, None
 
+    limit_ok = (
+        count < COUNT_LIMIT and
+        (not t or now - t < DAYS_LIMIT * 86400)
+    )
+    if joined == 0:
+        return promote(missing, 2)
+    if joined == 1:
+        return promote(missing, 1)
+    if joined == 2:
+        if limit_ok:
+            await bd.update_count(user_id, count + 1)
+            return True, None, None
+        return promote(missing, 2)
+    if joined == 3:
+        return promote(missing, 1)
+    if joined % 2 == 0:  # EVEN
+        if limit_ok:
+            await bd.update_count(user_id, count + 1)
+            return True, None, None
+        return promote(missing, 2)
+    return promote(missing, 1)
+    
 async def get_authchannel(bot, query):
     auth_list = await bd.get_fsub_list()
     if not auth_list: return True, None, None
