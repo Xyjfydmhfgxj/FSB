@@ -685,9 +685,9 @@ async def get_bad_files(query, file_type=None, filter=False):
     if file_type:
         filter['file_type'] = file_type
 
-    total_results = await Media1.count_documents(filter)
+    total_results = await Media1.count_documents(filter) + await Media2.count_documents(filter) + await Media3.count_documents(filter) + await Media4.count_documents(filter)
 
-    cursor = Media1.find(filter)
+    cursor = Media1.find(filter) + Media2.find(filter) + Media3.find(filter) + Media4.find(filter)
     # Sort by recent
     cursor.sort('$natural', -1)
     # Get list of files
@@ -703,6 +703,12 @@ async def get_file_details(query):
     file2 = await Media2.find_one(filter)
     if file2:
         return [file2]
+    file3 = await Media3.find_one(filter)
+    if file3:
+        return [file3]
+    file4 = await Media4.find_one(filter)
+    if file4:
+        return [file4]
     return []
 
 
