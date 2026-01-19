@@ -91,74 +91,49 @@ async def is_req_subscribed(bot, query, syd=AUTH_CHANNEL):
 
 
 async def get_authchannel(bot, query):
+async def get_authchannel(bot, query):
     auth_list = await bd.get_fsub_list()
-    if not auth_list: return True, None, None
-    user_id = query.from_user.id
-    doc = await bd.syd_user(user_id)  # expects {"_id": id, "channels": [...], "count": n, "time": ts} or None
-    now = int(time.time())
-
-    # Helper: return False + first/second auth channel when no DB channels exist
-    def no_db_response():
-        ch1 = auth_list[0] if len(auth_list) >= 1 else None
-        ch2 = auth_list[1] if len(auth_list) >= 2 else None
-        return False, ch1, ch2
-
-    # Helper: safe member check
-    async def _is_member(bot, ch_id, user_id):
-        try:
-            m = await bot.get_chat_member(int(ch_id), user_id)
-        except UserNotParticipant:
-            return False
-        except Exception:
-            # treat other errors as "not subscribed" to be safe for force-sub flow
-            return False
-        else:
-            return m.status != enums.ChatMemberStatus.BANNED
-
-    # If no DB doc -> prompt first one or two auth channels
-    if not doc:
-        missing = []
-        for ch in auth_list:
-            if not await _is_member(bot, ch, user_id):
-                missing.append(ch)
-            if len(missing) == 2:
-                break
-
-        if missing:
-            ch1 = missing[0]
-            ch2 = missing[1] if len(missing) > 1 else None
-            return False, ch1, ch2
-
+    if not auth_list:
         return True, None, None
-
+    user_id = query.from_user.id
+    doc = await bd.syd_user(user_id)
+    now = int(time.time())
+    def promote(missing, n):
+        ch1 = missing[0] if len(missing) >= 1 else None
+        ch2 = missing[1] if len(missing) >= 2 and n == 2 else None
+        return False, ch1, ch2
+    if not doc:
+        return promote(auth_list, 2)
     channels = doc.get("channels", []) or []
     count = doc.get("count", 0)
     t = doc.get("time", 0)
-    
     missing = [c for c in auth_list if c not in channels]
+    joined = len(channels)
     if not missing:
         return True, None, None
-        
-    if len(channels) == 1:
-        stored = channels[0]
-        # stored channel is ok -> find first auth channel that's not in DB and prompt it
-        ch1 = missing[0] if len(missing) >= 1 else None
-        # second prompt not required in this case (keep as None)
-        return False, ch1, None
-        
-    if count < COUNT_LIMIT and (not t or (now - t) < DAYS_LIMIT * 86400):
-        await bd.update_count(user_id, count + 1)
-        print("with boundary")
-        return True, None, None
 
-    if len(channels) >= 2:
-        for ch in missing:
-            if not await _is_member(bot, ch, user_id):
-                print(f"with {ch}")
-                return False, ch, None
-        return True, None, None
-    return no_db_response()
-
+    limit_ok = (
+        count < COUNT_LIMIT and
+        (not t or now - t < DAYS_LIMIT * 86400)
+    )
+    if joined == 0:
+        return promote(missing, 2)
+    if joined == 1:
+        return promote(missing, 1)
+    if joined == 2:
+        if limit_ok:
+            await bd.update_count(user_id, count + 1)
+            return True, None, None
+        return promote(missing, 2)
+    if joined == 3:
+        return promote(missing, 1)
+    if joined % 2 == 0:  # EVEN
+        if limit_ok:
+            await bd.update_count(user_id, count + 1)
+            return True, None, None
+        return promote(missing, 2)
+    return promote(missing, 1)
+    
 async def extract_audio_subtitles_formatted(text: str) -> str:
     cleaned = re.sub(r"[🔊📜]", "", text)
     t = cleaned.replace("\n", " ").strip()
