@@ -47,7 +47,7 @@ async def ask_skip(bot: Client, user_id: int) -> int:
     try:
         msg = await bot.ask(
             chat_id=user_id,
-            text="Send skip number (integer)\nOr send `/skip` to start from beginning",
+            text="Send skip number (integer)\nOr send /skip to start from beginning",
             timeout=60
         )
 
@@ -89,18 +89,18 @@ async def index_files(bot, query):
 
     skip = await ask_skip(bot, int(from_user))
 
-    await msg.edit(
+    syd = await msg.reply(
         f"✅ Added to queue\nSkip: <code>{skip}</code>",
         reply_markup=InlineKeyboardMarkup(
             [[InlineKeyboardButton("Cancel", callback_data="index_cancel")]]
         )
     )
-
+    await msg.delete()
     await INDEX_QUEUE.put({
         "lst_msg_id": int(lst_msg_id),
         "chat": int(chat) if str(chat).isdigit() else chat,
-        "msg": msg,
-        "db": db,
+        "msg": syd,
+        "db": int(db),
         "skip": skip
     })
 
@@ -159,6 +159,14 @@ async def send_for_index(bot, message):
             [
                 InlineKeyboardButton('Db 2',
                                      callback_data=f'index#accept#{chat_id}#{last_msg_id}#{message.from_user.id}#2')
+            ],
+            [
+                InlineKeyboardButton('Db 3',
+                                     callback_data=f'index#accept#{chat_id}#{last_msg_id}#{message.from_user.id}#3')
+            ],
+            [
+                InlineKeyboardButton('Db 4',
+                                     callback_data=f'index#accept#{chat_id}#{last_msg_id}#{message.from_user.id}#4')
             ],
             [
                 InlineKeyboardButton('close', callback_data='close_data'),
@@ -271,11 +279,6 @@ async def index_files_to_db(lst_msg_id, chat, msg, bot, db):
                 result_queue.task_done()
                 break
             aynav, vnay = res
-            # Use the semantics you provided:
-            # aynav: True/False (file saved flag)
-            # vnay == 0 : saved
-            # vnay == 1 : already saved (duplicate)
-            # vnay == 2 : error
             try:
                 if vnay == 1:
                     total_files += 1
