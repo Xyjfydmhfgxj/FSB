@@ -8,7 +8,7 @@ from pymongo.errors import DuplicateKeyError
 from umongo import Instance, Document, fields
 from motor.motor_asyncio import AsyncIOMotorClient
 from marshmallow.exceptions import ValidationError
-from info import DATABASE_URI, DATABASE_URI2, DATABASE_NAME, COLLECTION_NAME, USE_CAPTION_FILTER, MAX_B_TN
+from info import DATABASE_URI, DATABASE_URI2, DATABASE_URI3, DATABASE_URI4, DATABASE_NAME, COLLECTION_NAME, USE_CAPTION_FILTER, MAX_B_TN
 from utils import get_settings, save_group_settings
 
 logger = logging.getLogger(__name__)
@@ -22,6 +22,14 @@ instance1 = Instance.from_db(db1)
 client2 = AsyncIOMotorClient(DATABASE_URI2)
 db2 = client2[DATABASE_NAME]
 instance2 = Instance.from_db(db2)
+
+client3 = AsyncIOMotorClient(DATABASE_URI3)
+db3 = client3[DATABASE_NAME]
+instance3 = Instance.from_db(db3)
+
+client4 = AsyncIOMotorClient(DATABASE_URI4)
+db4 = client4[DATABASE_NAME]
+instance4 = Instance.from_db(db4)
 
 
 @instance1.register
@@ -53,10 +61,48 @@ class Media2(Document):
         indexes = ('$file_name',)
         collection_name = COLLECTION_NAME
 
+@instance3.register
+class Media3(Document):
+    file_id = fields.StrField(attribute='_id')
+    file_ref = fields.StrField(allow_none=True)
+    file_name = fields.StrField(required=True)
+    file_size = fields.IntField(required=True)
+    file_type = fields.StrField(allow_none=True)
+    mime_type = fields.StrField(allow_none=True)
+    caption = fields.StrField(allow_none=True)
 
+    class Meta:
+        indexes = ('$file_name',)
+        collection_name = COLLECTION_NAME
 
-async def save_file(media, use_db=1):
-    model = Media1 if use_db == 1 else Media2
+@instance4.register
+class Media4(Document):
+    file_id = fields.StrField(attribute='_id')
+    file_ref = fields.StrField(allow_none=True)
+    file_name = fields.StrField(required=True)
+    file_size = fields.IntField(required=True)
+    file_type = fields.StrField(allow_none=True)
+    mime_type = fields.StrField(allow_none=True)
+    caption = fields.StrField(allow_none=True)
+
+    class Meta:
+        indexes = ('$file_name',)
+        collection_name = COLLECTION_NAME
+
+def get_model(use_db: int):
+    if use_db == 1:
+        return Media1
+    elif use_db == 2:
+        return Media2
+    elif use_db == 3:
+        return Media3
+    elif use_db == 4:
+        return Media4
+    else:
+        return Media3
+        
+async def save_file(media, use_db=3):
+    model = get_model(use_db)
     # TODO: Find better way to get same file_id for same media to avoid duplicates
     file_id, file_ref = unpack_new_file_id(media.file_id)
     
@@ -67,6 +113,16 @@ async def save_file(media, use_db=1):
 
     exists_db2 = await Media2.find_one({"file_id": file_id})
     if exists_db2:
+        logger.warning(f"File already exists in Media2 → Skipping save.")
+        return False, 0
+
+    exists_db3 = await Media3.find_one({"file_id": file_id})
+    if exists_db3:
+        logger.warning(f"File already exists in Media2 → Skipping save.")
+        return False, 0
+
+    exists_db4 = await Media4.find_one({"file_id": file_id})
+    if exists_db4:
         logger.warning(f"File already exists in Media2 → Skipping save.")
         return False, 0
         
@@ -190,7 +246,6 @@ LANG_MAP = {
     "latin": ["lat"], "lat": ["latin"]
 }
 
-
 def expand_language_variants(query: str) -> list[str]:
     variants = {query}
     ql = query.lower()
@@ -301,37 +356,243 @@ async def get_search_results(client, chat_id, query, file_type=None, max_results
             return await model.find(filter).sort("$natural", -1).skip(skip).limit(limit).to_list(limit)
 
         # -------- COUNT (except first page) --------
-        db2_count = None
+        db4_count = db3_count = db2_count = None
         if offset > 0:
-            db2_count = await Media2.count_documents(filter)
+            db4_count, db3_count, db2_count = await asyncio.gather(
+                Media4.count_documents(filter),
+                Media3.count_documents(filter),
+                Media2.count_documents(filter)
+            )
 
         results = []
 
         # -------- FETCH LOGIC --------
-        if db2_count is None or offset < db2_count:
-            skip2 = offset if db2_count is None else offset
-            results = await fetch(Media2, skip2, max_results)
+        if db4_count is None or offset < db4_count:
+            # Media4
+            results = await fetch(Media4, offset, max_results)
+
+            if len(results) < max_results:
+                used = len(results)
+                results += await fetch(Media3, 0, max_results - used)
+
+                if len(results) < max_results:
+                    used = len(results)
+                    results += await fetch(Media2, 0, max_results - used)
+
+                    if len(results) < max_results:
+                        used = len(results)
+                        results += await fetch(Media1, 0, max_results - used)
+
+        elif offset < db4_count + db3_count:
+            # Media3
+            results = await fetch(Media3, offset - db4_count, max_results)
+
+            if len(results) < max_results:
+                used = len(results)
+                results += await fetch(Media2, 0, max_results - used)
+
+                if len(results) < max_results:
+                    used = len(results)
+                    results += await fetch(Media1, 0, max_results - used)
+
+        elif offset < db4_count + db3_count + db2_count:
+            # Media2
+            results = await fetch(Media2, offset - db4_count - db3_count, max_results)
 
             if len(results) < max_results:
                 used = len(results)
                 results += await fetch(Media1, 0, max_results - used)
+
         else:
-            results = await fetch(Media1, offset - db2_count, max_results)
+            # Media1
+            results = await fetch(
+                Media1,
+                offset - db4_count - db3_count - db2_count,
+                max_results
+            )
 
         # -------- NEXT & TOTAL --------
         next_offset = offset + max_results if len(results) == max_results else ""
         total_results = None
 
         if offset == 10:
-            c1, c2 = await asyncio.gather(
+            c1, c2, c3, c4 = await asyncio.gather(
                 Media1.count_documents(filter),
-                Media2.count_documents(filter)
+                Media2.count_documents(filter),
+                Media3.count_documents(filter),
+                Media4.count_documents(filter)
             )
-            total_results = c1 + c2
-        elif offset == 0 and len(results) < max_results:
+            total_results = c1 + c2 + c3 + c4
+
+        elif offset == 0 and not next_offset:
             total_results = len(results)
 
         return results, next_offset, total_results
+
+
+    except Exception as e:
+        await client.send_message(
+            ADMIN_ID,
+            f"❌ Error in get_search_results\nChat: `{chat_id}`\nQuery: `{query}`\nError: `{e}`"
+        )
+        return [], "", 0
+
+
+async def get_sch_results(client, chat_id, query, file_type=None, max_results=10, offset=0, filter=False):
+    """For given query return (results, next_offset, total_results)"""
+    try:
+        if chat_id is not None:
+            settings = await get_settings(int(chat_id))
+            try:
+                if settings['max_btn']:
+                    max_results = 10
+                else:
+                    max_results = int(MAX_B_TN)
+            except KeyError:
+                await save_group_settings(int(chat_id), 'max_btn', False)
+                settings = await get_settings(int(chat_id))
+                if settings['max_btn']:
+                    max_results = 12
+                else:
+                    max_results = int(MAX_B_TN)
+
+        query = query.strip()
+
+        search_variants = expand_numbers(query)
+        season_match = re.search(r"\b(?:season\s*(\d{1,2})|s0*(\d{1,2}))\b", query, re.IGNORECASE)
+        # Episode detection
+        episode_match = re.search(r"\b(?:episode\s*(\d{1,3})|e[p]?0*(\d{1,3}))\b", query, re.IGNORECASE)
+        # Compact SxxEyy detection
+        compact_match = re.search(r"\bS0*(\d{1,2})[\s._-]*E[P]?0*(\d{1,3})\b", query, re.IGNORECASE)
+
+        if compact_match:
+            sn, ep = int(compact_match.group(1)), int(compact_match.group(2))
+            search_variants.append(re.sub(compact_match.re, f"S{sn:02d}E{ep:02d}", query))
+            search_variants.append(re.sub(compact_match.re, f"S{sn}E{ep}", query))
+            search_variants.append(re.sub(compact_match.re, f"Season {sn} Episode {ep}", query))
+
+        if season_match and episode_match:
+            sn = int(season_match.group(1) or season_match.group(2))
+            ep = int(episode_match.group(1) or episode_match.group(2))
+                
+                # Replace season and episode in the original query using spans
+            start, end = min(season_match.start(), episode_match.start()), max(season_match.end(), episode_match.end())
+            replaced = query[:start] + f"S{sn:02d}E{ep:02d}" + query[end:]
+            search_variants.append(replaced)
+            replaced2 = query[:start] + f"S{sn}E{ep}" + query[end:]
+            search_variants.append(replaced2)
+            replaced3 = query[:start] + f"Season {sn} Episode {ep}" + query[end:]
+            search_variants.append(replaced3)
+
+
+        if season_match:
+            sn = int(season_match.group(1) or season_match.group(2))
+            search_variants.append(re.sub(season_match.re, f"S{sn:02d}", query))
+            search_variants.append(re.sub(season_match.re, f"Season {sn}", query))
+
+        if episode_match:
+            ep = int(episode_match.group(1) or episode_match.group(2))
+            search_variants.append(re.sub(episode_match.re, f"E{ep:02d}", query))
+            search_variants.append(re.sub(episode_match.re, f"EP {ep:02d}", query))
+            search_variants.append(re.sub(episode_match.re, f"EP{ep}", query))
+            search_variants.append(re.sub(episode_match.re, f"Episode {ep}", query))
+            for syd in range(1, 9):  # for seasons 1 to 10
+                search_variants.append(re.sub(episode_match.re, f"S{syd:02d}E{ep:02d}", query))
+                search_variants.append(re.sub(episode_match.re, f"S{syd}E{ep}", query))
+
+        # Expand language keywords
+        search_variants.append(re.sub("&", "and", query))
+
+        # Expand language keywords
+        expanded_variants = []
+        for q in search_variants:
+            expanded_variants.extend(expand_language_variants(q))
+        search_variants = list(set(expanded_variants))  # remove duplicates
+
+        regex_list = []
+        for q in search_variants:
+            if not q:
+                raw_pattern = "."
+            elif " " not in q:
+                raw_pattern = rf"(\b|[\.\+\-_]){re.escape(q)}(\b|[\.\+\-_])"
+            else:
+                escaped_q = re.escape(q)
+                raw_pattern = escaped_q.replace(r"\ ", r".*[\s\.\+\-_]")
+
+            try:
+                regex_list.append(re.compile(raw_pattern, flags=re.IGNORECASE))
+            except Exception as e:
+                await client.send_message(
+                    ADMIN_ID,
+                    f"⚠️ Regex compile failed\nQuery: `{q}`\nPattern: `{raw_pattern}`\nError: `{e}`"
+                )
+                continue
+
+        
+
+        #if USE_CAPTION_FILTER:
+           # filter = {"$or": [{"file_name": {"$in": regex_list}}, {"caption": {"$in": regex_list}}]}
+       # else:
+         #  # filter = {"file_name": {"$in": regex_list
+#
+        
+        filter = {"file_name": {"$in": regex_list}}
+        if file_type:
+            filter["file_type"] = file_type
+
+
+        async def search_db(model):
+            cursor = model.find(filter)
+            cursor.sort("$natural", -1).skip(offset).limit(max_results)
+            files = await cursor.to_list(length=max_results)
+            return files
+
+        if offset == 0:
+            files2, files1 = await asyncio.gather(
+            search_db(Media2),
+            search_db(Media1)
+            )
+
+            combined = (files2 + files1)[:max_results]
+            if len(combined) < max_results:
+                total_results = len(combined)
+                next_offset = ""
+            else:
+                total_results = None
+                next_offset = max_results
+            return combined, next_offset, total_results
+
+
+        files2, files1, count2, count1 = await asyncio.gather(
+            search_db(Media2),
+            search_db(Media1),
+            Media2.count_documents(filter),
+            Media1.count_documents(filter)
+        )
+
+        combined = files2 + files1
+        combined = combined[:max_results]
+
+        total_results = count1 + count2
+
+        next_offset = offset + max_results if (offset + max_results) < total_results else ""
+
+        return combined, next_offset, total_results
+        
+    # get total matching results (can be slow for huge collection)
+        total_results = await Media.count_documents(filter)
+
+    # fetch only what we need
+        cursor = Media.find(filter)
+        cursor.sort("$natural", -1)
+        cursor.skip(offset).limit(max_results)
+        files = await cursor.to_list(length=max_results)
+
+    # calculate next offset (allowing total_results to exceed max_results)
+        next_offset = offset + max_results if (offset + max_results) < total_results else ""
+
+        return files, next_offset, total_results
+
 
     except Exception as e:
         await client.send_message(
@@ -480,3 +741,9 @@ def unpack_new_file_id(new_file_id):
     )
     file_ref = encode_file_ref(decoded.file_reference)
     return file_id, file_ref
+
+
+async def get_total_db_size_mb(db):
+    stats = await db.command("dbStats")
+    return stats["dataSize"] + stats["indexSize"]
+    
