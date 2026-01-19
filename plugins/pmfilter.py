@@ -1082,6 +1082,9 @@ async def cb_handler(client: Client, query: CallbackQuery):
         except:
             typed = query.from_user.id
         ident, file_id = query.data.split("#")
+        await query.answer(url=f"https://telegram.me/{temp.U_NAME}?start={ident}_{file_id}")
+        return
+        
         files_ = await get_file_details(file_id)
         if not files_:
             return await query.answer('Nᴏ sᴜᴄʜ ғɪʟᴇ ᴇxɪsᴛ.')
