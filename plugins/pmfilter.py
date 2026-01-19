@@ -2174,7 +2174,13 @@ async def cb_handler(client: Client, query: CallbackQuery):
             InputMediaPhoto(random.choice(PICS))
            )
             await query.message.edit_text(
-                text=script.SHORTLINK_INelif query.data == "stats":
+                text=script.SHORTLINK_INFO,
+                reply_markup=reply_markup,
+                parse_mode=enums.ParseMode.HTML
+            )   
+                
+                
+    elif query.data == "stats":
         buttons = [[
             InlineKeyboardButton('⇇ ʙΔᴄᴋ', callback_data='about'),
             InlineKeyboardButton('⟲ ʀᴇғяᴇsʜ ⟲', callback_data='rfrsh')
@@ -2259,10 +2265,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
             text=script.STATUS_TXT.format(total_users, totl_chats, files, files2, files3, files4, size, free, size2, free2, size3, free3, size4, free4),
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
-        )FO,
-                reply_markup=reply_markup,
-                parse_mode=enums.ParseMode.HTML
-            )   
+        )
     elif query.data == "shortlink_info2":
             btn = [[
             InlineKeyboardButton("⋞ ʙΔᴄᴋ", callback_data="shortlink_info"),
