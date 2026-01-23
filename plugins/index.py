@@ -1,4 +1,3 @@
-
 import logging
 import asyncio
 from asyncio import Queue
@@ -45,17 +44,16 @@ async def start_index_worker(bot: Client):
 
 async def ask_skip(bot: Client, user_id: int) -> int:
     try:
-        msg = await bot.ask(
-            chat_id=user_id,
-            text="Send skip number (integer)\nOr send /skip to start from beginning",
-            timeout=60
+        q = await bot.send_message(
+            user_id,
+            "Send skip number (integer)\nOr send /skip to start from beginning"
         )
-
+        msg = await bot.ask(chat_id=user_id, text=None, timeout=60)
+        await q.delete()
+        await msg.delete()
         if msg.text.lower() == "/skip":
             return 0
-
         return max(int(msg.text), 0)
-
     except asyncio.TimeoutError:
         await bot.send_message(user_id, "⏱ Timeout. Skip set to 0")
         return 0
@@ -84,22 +82,20 @@ async def index_files(bot, query):
 
     await start_index_worker(bot)
 
-    await query.answer("Processing…", show_alert=True)
     msg = query.message
 
     skip = await ask_skip(bot, int(from_user))
 
-    syd = await msg.reply(
-        f"✅ Added to queue\nSkip: <code>{skip}</code>",
+    await msg.edit(
+        f"Added to queue ✅\nSkip: <code>{skip}</code>",
         reply_markup=InlineKeyboardMarkup(
             [[InlineKeyboardButton("Cancel", callback_data="index_cancel")]]
         )
     )
-    await msg.delete()
     await INDEX_QUEUE.put({
         "lst_msg_id": int(lst_msg_id),
         "chat": int(chat) if str(chat).isdigit() else chat,
-        "msg": syd,
+        "msg": msg,
         "db": int(db),
         "skip": skip
     })
@@ -154,17 +150,13 @@ async def send_for_index(bot, message):
         buttons = [
             [
                 InlineKeyboardButton('Db 1',
-                                     callback_data=f'index#accept#{chat_id}#{last_msg_id}#{message.from_user.id}#1')
-            ],
-            [
+                                     callback_data=f'index#accept#{chat_id}#{last_msg_id}#{message.from_user.id}#1'),
                 InlineKeyboardButton('Db 2',
                                      callback_data=f'index#accept#{chat_id}#{last_msg_id}#{message.from_user.id}#2')
             ],
             [
                 InlineKeyboardButton('Db 3',
-                                     callback_data=f'index#accept#{chat_id}#{last_msg_id}#{message.from_user.id}#3')
-            ],
-            [
+                                     callback_data=f'index#accept#{chat_id}#{last_msg_id}#{message.from_user.id}#3'),
                 InlineKeyboardButton('Db 4',
                                      callback_data=f'index#accept#{chat_id}#{last_msg_id}#{message.from_user.id}#4')
             ],
@@ -175,7 +167,8 @@ async def send_for_index(bot, message):
         reply_markup = InlineKeyboardMarkup(buttons)
         return await message.reply(
             f'Do you Want To Index This Channel/ Group ?\n\nChat ID/ Username: <code>{chat_id}</code>\nLast Message ID: <code>{last_msg_id}</code>',
-            reply_markup=reply_markup)
+            reply_markup=reply_markup
+            quote=True)
 
     if type(chat_id) is int:
         try:
@@ -187,11 +180,11 @@ async def send_for_index(bot, message):
     buttons = [
         [
             InlineKeyboardButton('Accept Index',
-                                 callback_data=f'index#accept#{chat_id}#{last_msg_id}#{message.from_user.id}')
+                                 callback_data=f'index#accept#{chat_id}#{last_msg_id}#{message.from_user.id}#3')
         ],
         [
             InlineKeyboardButton('Reject Index',
-                                 callback_data=f'index#reject#{chat_id}#{message.id}#{message.from_user.id}'),
+                                 callback_data=f'index#reject#{chat_id}#{message.id}#{message.from_user.id}#3'),
         ]
     ]
     reply_markup = InlineKeyboardMarkup(buttons)
