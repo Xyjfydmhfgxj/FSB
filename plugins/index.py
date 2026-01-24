@@ -257,7 +257,8 @@ async def index_files_to_db(lst_msg_id, chat, msg, bot, db):
     unsupported = 0
 
     # Local queue and result queue
-    queue: asyncio.Queue[Any] = asyncio.Queue()
+    queue: asyncio.Queue[Any] = asyncio.Queue(maxsize=500)
+  #  queue: asyncio.Queue[Any] = asyncio.Queue()
     result_queue: asyncio.Queue[tuple] = asyncio.Queue()
 
     # Start workers
