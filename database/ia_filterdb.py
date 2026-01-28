@@ -102,22 +102,34 @@ def get_model(use_db: int):
         return Media3
 
 async def shift_files(
-    source_collection=Media2,
-    target_collection=Media3,
-    limit=50000
+    source_model=Media2,
+    target_model=Media3,
+    limit: int = 50_000
 ):
-    cursor = source_collection.find().limit(limit)
+    source_col = source_model.collection
+    target_col = target_model.collection
+
+    cursor = source_col.find().limit(limit)
     moved = 0
 
     async for doc in cursor:
         try:
-            await target_collection.insert_one(doc)
-            await source_collection.delete_one({"_id": doc["_id"]})
+            # insert raw document (keeps _id, file_ref, everything)
+            await target_col.insert_one(doc)
+
+            # delete from source
+            await source_col.delete_one({
+                "_id": doc["_id"]
+            })
+
             moved += 1
+
         except DuplicateKeyError:
+            # already exists in target
             continue
 
     return moved
+
 
 
     
