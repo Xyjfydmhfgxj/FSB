@@ -14,7 +14,7 @@ from utils import get_settings, save_group_settings
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-async def shift_files(source_model=Media2, target_model==Media4, limit: int = 10000):
+async def shift_files(source_model=Media2, target_model=Media4, limit: int = 10000):
     """
     Move `limit` files from source_model to target_model
     """
