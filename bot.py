@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 from pyrogram import Client, __version__
 from pyrogram.raw.all import layer
-from database.ia_filterdb import Media1, Media2
+from database.ia_filterdb import Media1, Media2, Media3, Media4, shift_files
 from database.users_chats_db import db
 from info import *
 from utils import temp
@@ -70,8 +70,11 @@ async def Lazy_start():
     b_users, b_chats = await db.get_banned()
     temp.BANNED_USERS = b_users
     temp.BANNED_CHATS = b_chats
-   # await Media1.ensure_indexes()
+    await shift_files()
+    await Media1.ensure_indexes()
     await Media2.ensure_indexes()
+    await Media3.ensure_indexes()
+    await Media4.ensure_indexes()
     me = await LazyPrincessBot.get_me()
     temp.ME = me.id
     temp.U_NAME = me.username
