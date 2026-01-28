@@ -101,41 +101,24 @@ def get_model(use_db: int):
     else:
         return Media3
 
-async def shift_files(source_engine=instance2, source_model=Media2, target_engine=instance3, target_model=Media3, limit: int = 50000):
-    docs = await source_engine.find(source_model, limit=limit)
-
-    if not docs:
-        return 0
-
+async def shift_files(
+    source_collection=Media2,
+    target_collection=Media3,
+    limit=50000
+):
+    cursor = source_collection.find().limit(limit)
     moved = 0
 
-    for doc in docs:
-        # Skip if already exists in target
-        exists = await target_engine.find_one(
-            target_model, {"_id": doc.file_id}
-        )
-        if exists:
-            continue
-
-        # Insert into target
-        new_doc = target_model(
-            file_id=doc.file_id,
-            file_ref=doc.file_ref,
-            file_name=doc.file_name,
-            file_size=doc.file_size,
-            file_type=doc.file_type,
-            mime_type=doc.mime_type,
-            caption=doc.caption,
-        )
-
+    async for doc in cursor:
         try:
-            await target_engine.save(new_doc)
-            await source_engine.delete(doc)  # ✅ ODMantic delete
+            await target_collection.insert_one(doc)
+            await source_collection.delete_one({"_id": doc["_id"]})
             moved += 1
         except DuplicateKeyError:
             continue
 
     return moved
+
 
     
         
