@@ -14,7 +14,44 @@ from utils import get_settings, save_group_settings
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+async def shift_files(source_model=Media2, target_model==Media4, limit: int = 10000):
+    """
+    Move `limit` files from source_model to target_model
+    """
+    cursor = source_model.find().limit(limit)
+    files = await cursor.to_list(length=limit)
 
+    if not files:
+        return 0
+
+    moved = 0
+
+    for doc in files:
+        # Avoid duplicate in target
+        exists = await target_model.find_one({"_id": doc.file_id})
+        if exists:
+            continue
+
+        # Create new doc for target
+        new_doc = target_model(
+            file_id=doc.file_id,
+            file_ref=doc.file_ref,
+            file_name=doc.file_name,
+            file_size=doc.file_size,
+            file_type=doc.file_type,
+            mime_type=doc.mime_type,
+            caption=doc.caption,
+        )
+
+        try:
+            await new_doc.commit()
+            await source_model.delete_one({"_id": doc.file_id})
+            moved += 1
+        except DuplicateKeyError:
+            continue
+
+    return moved
+    
 client1 = AsyncIOMotorClient(DATABASE_URI)
 db1 = client1[DATABASE_NAME]
 instance1 = Instance.from_db(db1)
