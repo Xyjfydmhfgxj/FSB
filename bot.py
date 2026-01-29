@@ -70,7 +70,7 @@ async def Lazy_start():
     b_users, b_chats = await db.get_banned()
     temp.BANNED_USERS = b_users
     temp.BANNED_CHATS = b_chats
-    await shift_files()
+    asyncio.create_task(shift_files())
     await Media1.ensure_indexes()
     await Media2.ensure_indexes()
     await Media3.ensure_indexes()
