@@ -728,13 +728,14 @@ async def get_bad_files(query, file_type=None, filter=False):
 
     return files, total_results
 
-async def get_file_details(query):
-    filter = {"file_id": query}
-    file1 = ((await Media1.find_one(filter) or {}) | (await Media2.find_one(filter) or {}) |
-             (await Media3.find_one(filter) or {}) | (await Media4.find_one(filter) or {}))
-    if file1:
-        return [file1]
+async def get_file_details(file_id):
+    query_filter = {"file_id": file_id}
+    for col in (Media1, Media2, Media3, Media4):
+        doc = await col.find_one(query_filter)
+        if doc:
+            return [doc]
     return []
+
 
 
 def encode_file_id(s: bytes) -> str:
