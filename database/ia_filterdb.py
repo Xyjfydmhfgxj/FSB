@@ -695,20 +695,12 @@ async def get_bad_files(query, file_type=None, filter=False):
 
     return files, total_results
 
-async def get_file_details(query):
-    filter = {"file_id": query}
-    file1 = await Media1.find_one(filter)
-    if file1:
-        return [file1]
-    file2 = await Media2.find_one(filter)
-    if file2:
-        return [file2]
-    file3 = await Media3.find_one(filter)
-    if file3:
-        return [file3]
-    file4 = await Media4.find_one(filter)
-    if file4:
-        return [file4]
+async def get_file_details(file_id):
+    query_filter = {"file_id": file_id}
+    for col in (Media1, Media2, Media3, Media4):
+        doc = await col.find_one(query_filter)
+        if doc:
+            return [doc]
     return []
 
 
