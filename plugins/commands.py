@@ -104,7 +104,66 @@ async def check_channel(client, query):
     else:
         await query.answer("ɪ ᴀᴍ ᴀ ʙᴏᴛ, ᴊᴏɪɴ ᴛʜᴇ ᴄʜᴀɴɴᴇʟ ꜰɪʀꜱᴛ 🙄", show_alert=True)
 
-@Client.on_message(filters.command("start") & filters.incoming)
+
+from pyrogram import Client, filters
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+
+@Client.on_message(filters.command("start"))
+async def start_cmd(client, message):
+
+    user = message.from_user
+    mention = user.mention if user else "there"
+
+    text = (
+        f"Hello {mention},\n"
+        "<b>Iam a Telegram Movie - Series SearchBot by team @ProSearch.</b>\n\n"
+        "/start - <i>Start Search Bot</i>\n"
+        "/help - <i>How to Search</i>\n"
+        "/Movies - <i>Latest Movies Releases</i>\n"
+        "/Series - <i>Latest TV-WEBSeries Releases</i>\n"
+        "/About - <i>About me</i>\n"
+        "/request - <i>Request Movies and TVSeries</i>"
+    )
+
+    buttons = InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton("🤖 Latest Releases Updates", url="https://t.me/+vrEqZVNAdfU3NDM1")
+            ],[
+                InlineKeyboardButton("🎙️ BOT Updates Channel", url="https://t.me/+MctHWdg20Fs5ZTM1")
+            ],[
+                InlineKeyboardButton("♦️ Movies BOT 🔍", url="https://t.me/ProSearchM11Bot"),
+                InlineKeyboardButton("♦️ TVSeries BOT 🔍", url="https://t.me/ProsearchY11Bot")
+            ]
+        ]
+    )
+
+    await message.reply_text(
+        text,
+        reply_markup=buttons,
+        disable_web_page_preview=True
+    )
+
+@Client.on_message(filters.command("help"))
+async def help_cmd(client, message):
+    await message.reply_text(
+        "📖 How to Search\n\n"
+        "Send movie or series name with year.\n"
+        "Example:\n"
+        "Avatar 2009\n"
+        "Breaking Bad S01E01"
+    )
+
+@Client.on_message(filters.command("Movies"))
+async def movies_cmd(client, message):
+    await message.reply_text("🎬 Latest Movies Releases")
+
+
+@Client.on_message(filters.command("Series"))
+async def series_cmd(client, message):
+    await message.reply_text("📺 Latest TV-WEBSeries Releases")
+    
+#@Client.on_message(filters.command("start") & filters.incoming)
 async def start(client, message):
     if message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
         buttons = [[
