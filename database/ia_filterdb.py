@@ -99,7 +99,7 @@ def get_model(use_db: int):
     elif use_db == 4:
         return Media4
     else:
-        return Media3
+        return Media4
 
 async def shift_files(
     source_model=Media3,
@@ -134,7 +134,7 @@ async def shift_files(
 
     
         
-async def save_file(media, use_db=3):
+async def save_file(media, use_db=4):
     model = get_model(use_db)
     # TODO: Find better way to get same file_id for same media to avoid duplicates
     file_id, file_ref = unpack_new_file_id(media.file_id)
