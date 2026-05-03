@@ -102,8 +102,8 @@ def get_model(use_db: int):
         return Media3
 
 async def shift_files(
-    source_model=Media2,
-    target_model=Media3,
+    source_model=Media3,
+    target_model=Media2,
     limit: int = 50_000
 ):
     source_col = source_model.collection
