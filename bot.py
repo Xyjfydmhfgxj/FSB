@@ -26,7 +26,7 @@ from pyrogram.raw.all import layer
 #from database.ia_filterdb import Media1, Media2, Media3, Media4, shift_files
 from database.users_chats_db import db
 from info import *
-from utils import temp
+#from utils import temp
 from typing import Union, Optional, AsyncGenerator
 from pyrogram import types
 from Script import script 
@@ -76,9 +76,9 @@ async def Lazy_start():
    # await Media3.ensure_indexes()
   #  await Media4.ensure_indexes()
     me = await LazyPrincessBot.get_me()
-    temp.ME = me.id
-    temp.U_NAME = me.username
-    temp.B_NAME = me.first_name
+   # temp.ME = me.id
+   # temp.U_NAME = me.username
+   # temp.B_NAME = me.first_name
     LazyPrincessBot.username = '@' + me.username
     logging.info(f"{me.first_name} with for Pyrogram v{__version__} (Layer {layer}) started on {me.username}.")
     logging.info(LOG_STR)
