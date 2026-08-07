@@ -105,6 +105,57 @@ async def check_channel(client, query):
 
 @Client.on_message(filters.command("start") & filters.incoming)
 async def start(client, message):
+
+        try:
+            # Fetch subscription statuses once
+            fsub, ch1, ch2 = await get_authchannel(client, message)    #is_req_sub = await is_req_subscribed(client, message, AUTH_CHANNEL)
+            #is_req_sub2 = await is_req_subscribed(client, message, SYD_CHANNEL)
+            is_sub = await is_subscribed(client, message)
+
+            if not (fsub and is_sub):
+                try:
+                    invite_link, invite_link2 = None, None
+                    if ch1:
+                        invite_link = await client.create_chat_invite_link(int(ch1), creates_join_request=True)
+                    if ch2:
+                        invite_link2 = await client.create_chat_invite_link(int(ch2), creates_join_request=True)
+                except ChatAdminRequired:
+                    logger.error("Make sure Bot is admin in Forcesub channel")
+                    return
+                
+                btn = []
+
+                # Only invite_linkadd buttons if the user is not subscribed
+                
+                if invite_link:
+                    btn.append([InlineKeyboardButton("⊛ Jᴏɪɴ Uᴘᴅᴀᴛᴇꜱ CʜᴀɴɴᴇL ¹⊛", url=invite_link.invite_link)])
+
+                if invite_link2:
+                    btn.append([InlineKeyboardButton("⊛ Jᴏɪɴ Uᴘᴅᴀᴛᴇꜱ CʜᴀɴɴᴇL ²⊛", url=invite_link2.invite_link)])
+                
+                if not is_sub:
+                    btn.append([InlineKeyboardButton("⊛ Jᴏɪɴ Uᴘᴅᴀᴛᴇꜱ CʜᴀɴɴᴇL ³⊛", url=f"https://t.me/{FSUB_UNAME}")])
+                    
+                    
+                if len(message.command) > 1 and message.command[1] != "subscribe":
+                    try:
+                        kk, file_id = message.command[1].split("_", 1)
+                        btn.append([InlineKeyboardButton("↻ Tʀʏ Aɢᴀɪɴ ↻", callback_data=f"checksub#{kk}#{file_id}")])
+                    except (IndexError, ValueError):
+                        btn.append([InlineKeyboardButton("↻ Tʀʏ Aɢᴀɪɴ ↻", url=f"https://t.me/{temp.U_NAME}?start={message.command[1]}")])
+
+                sydback = await client.send_message(
+                    chat_id=message.from_user.id,
+                    text="<b>Jᴏɪɴ Oᴜʀ Uᴘᴅᴀᴛᴇꜱ Cʜᴀɴɴᴇʟ</b> Aɴᴅ Tʜᴇɴ Cʟɪᴄᴋ Oɴ Tʀʏ Aɢᴀɪɴ Tᴏ Gᴇᴛ Yᴏᴜʀ Rᴇǫᴜᴇꜱᴛᴇᴅ Fɪʟᴇ.",
+                    reply_markup=InlineKeyboardMarkup(btn),
+                    parse_mode=enums.ParseMode.HTML
+                )
+                await bd.store_file_id_if_not_subscribed(message.from_user.id, file_id, sydback.id)
+                return
+        except Exception as e:
+            logger.error(f"Error in subscription check: {e}")
+            await client.send_message(chat_id=1733124290, text=f"FORCE  SUB  ERROR ......  CHECK LOGS {e}")
+
     if message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
         buttons = [[
                     InlineKeyboardButton('📓 Gᴜɪᴅᴇ 📓', url=f"https://t.me/{temp.U_NAME}?start=help")
